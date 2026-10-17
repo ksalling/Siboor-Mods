@@ -1,9 +1,10 @@
-"""2D Cross-Section Verification & Diagnostic Plotter for Variant A and Variant B.
+"""2D Cross-Section Verification & Diagnostic Plotter for Iteration 2 (Variant A & Variant B).
 
 Slices all generated BREP solids and assembly components using 2D planes ONLY
 (`BRepAlgoAPI_Section`) to verify:
-- Sealed airflow path from `duct_extension` to bottom nozzle outlets of `[a]_duct`
-- Preserved/expanded airflow cross-sectional area
+- Sealed airflow path from `duct_extension` through `carriage_base` / `carriage` to bottom nozzle outlets of `[a]_duct`
+- 100% flat build-plate faces (`Z=47.32 mm` on `[a]_duct`, `Y=146.10 mm` on `carriage_base` & `carriage`) for support-free ABS printing
+- Exact 18 mm spacing between `Nema 14 Stepper` and `5015_adapter` using stock 37.76 mm `5015_standoff_x2`
 - Zero collisions with `siboorCNC`, `MGN12H`, `Nema 14 Stepper`, `led_mount`, `cartographer_mount`, and `LineuxTool`
 """
 
@@ -17,7 +18,12 @@ from src.siboor_lineux.analyze_2d import (
     section_wires_2d,
     translate_shape,
 )
-from src.siboor_lineux.generator import CARRIAGE_DY
+from src.siboor_lineux.generator import (
+    VARIANT_A_DY,
+    VARIANT_A_DZ,
+    VARIANT_B_DY,
+    VARIANT_B_DZ,
+)
 
 
 def render_variant_comparison(out_dir: str):
@@ -33,86 +39,97 @@ def render_variant_comparison(out_dir: str):
         load_brep(siboor_meta["Component414"]["brep"]), *SIBOOR_TO_LINEUX_VEC
     )
     mgn = load_brep(carriage_meta["mgn 12h"]["brep"])
-    tool = translate_shape(load_brep(tool_meta["[a]_toolhead"]["brep"]), 0, CARRIAGE_DY, 0)
-    shroud = translate_shape(
-        load_brep(tool_meta["[a]_v6chp_shroud_mount"]["brep"]), 0, CARRIAGE_DY, 0
-    )
-    stepper = translate_shape(
-        load_brep(carriage_meta["Nema 14 Stepper"]["brep"]), 0, CARRIAGE_DY, 0
-    )
-    ledm = translate_shape(load_brep(carriage_meta["led_mount"]["brep"]), 0, CARRIAGE_DY, 0)
-    carto = translate_shape(
-        load_brep(carriage_meta["cartographer_mount"]["brep"]), 0, CARRIAGE_DY, 0
-    )
+    ext2020 = load_brep(carriage_meta["2020 Extrusion"]["brep"])
 
     gen_dir = f"{CACHE_DIR}/generated"
-    va_carr = load_brep(f"{gen_dir}/Variant_A_Modular_Carriage_carriage.brep")
-    va_aduct = load_brep(f"{gen_dir}/Variant_A_Modular_Carriage_a_duct.brep")
-    va_dext = load_brep(f"{gen_dir}/Variant_A_Modular_Carriage_duct_extension.brep")
-    va_scarto = load_brep(f"{gen_dir}/Variant_A_Modular_Carriage_siboor_cartographer_mount.brep")
+    va_prefix = "Variant_A_Separate_Carriage_Base_14mm"
+    va_cbase = load_brep(f"{gen_dir}/{va_prefix}_carriage_base.brep")
+    va_carr = load_brep(f"{gen_dir}/{va_prefix}_carriage.brep")
+    va_aduct = load_brep(f"{gen_dir}/{va_prefix}_a_duct.brep")
+    va_dext = load_brep(f"{gen_dir}/{va_prefix}_duct_extension.brep")
+    va_scarto = load_brep(f"{gen_dir}/{va_prefix}_siboor_cartographer_mount.brep")
 
-    vb_carr = load_brep(f"{gen_dir}/Variant_B_Integrated_Duct_carriage.brep")
-    vb_aduct = load_brep(f"{gen_dir}/Variant_B_Integrated_Duct_a_duct.brep")
-    vb_dext = load_brep(f"{gen_dir}/Variant_B_Integrated_Duct_duct_extension.brep")
-    vb_scarto = load_brep(f"{gen_dir}/Variant_B_Integrated_Duct_siboor_cartographer_mount.brep")
+    vb_prefix = "Variant_B_Integrated_Carriage_UltraCompact_8.5mm"
+    vb_carr = load_brep(f"{gen_dir}/{vb_prefix}_carriage.brep")
+    vb_aduct = load_brep(f"{gen_dir}/{vb_prefix}_a_duct.brep")
+    vb_dext = load_brep(f"{gen_dir}/{vb_prefix}_duct_extension.brep")
+    vb_scarto = load_brep(f"{gen_dir}/{vb_prefix}_siboor_cartographer_mount.brep")
 
-    W, H = 1800, 1100
+    def shifted_commons(dy, dz):
+        return {
+            "tool": translate_shape(load_brep(tool_meta["[a]_toolhead"]["brep"]), 0, dy, dz),
+            "shroud": translate_shape(load_brep(tool_meta["[a]_v6chp_shroud_mount"]["brep"]), 0, dy, dz),
+            "stepper": translate_shape(load_brep(carriage_meta["Nema 14 Stepper"]["brep"]), 0, dy, dz),
+            "adapter5015": translate_shape(load_brep(carriage_meta["5015_adapter"]["brep"]), 0, dy, dz),
+            "ledm": translate_shape(load_brep(carriage_meta["led_mount"]["brep"]), 0, dy, dz),
+            "carto": translate_shape(load_brep(carriage_meta["cartographer_mount"]["brep"]), 0, dy, dz),
+        }
+
+    ca = shifted_commons(VARIANT_A_DY, VARIANT_A_DZ)
+    cb = shifted_commons(VARIANT_B_DY, VARIANT_B_DZ)
+
+    W, H = 1860, 1140
     img = Image.new("RGB", (W, H), (16, 18, 24))
     draw = ImageDraw.Draw(img)
 
     def to_px(y, z, x_off=0, y_top=40):
-        scale = 5.6
+        scale = 5.4
         px = int(x_off + (y - 95.0) * scale)
-        py = int(y_top + 860 - (z + 8.0) * scale)
+        py = int(y_top + 900 - (z + 6.0) * scale)
         return (px, py)
 
     panels = [
         (
-            "Variant A (Modular Carriage) — Centerline Airflow Section (X = 126.70 mm)",
+            "Variant A: Separate ABS carriage_base (dY = -14.0 mm, dZ = +2.5 mm) — Centerline X = 126.70 mm",
             126.70,
             40,
             [
-                ("MGN12H", mgn, (130, 135, 145), 2),
+                ("MGN12H / 2020", mgn, (130, 135, 145), 2),
+                ("2020 Extrusion", ext2020, (90, 95, 105), 1),
                 ("siboorCNC", siboor_body, (255, 70, 90), 3),
-                ("carriage (mod)", va_carr, (70, 220, 120), 2),
-                ("[a]_duct (mod)", va_aduct, (255, 200, 30), 2),
-                ("duct_extension (mod)", va_dext, (0, 220, 240), 3),
-                ("led_mount", ledm, (255, 140, 60), 2),
-                ("cartographer_mount", carto, (140, 170, 255), 1),
-                ("siboor_carto_mount", va_scarto, (255, 110, 200), 2),
-                ("LineuxTool", tool, (190, 120, 255), 1),
-                ("hotend_shroud", shroud, (160, 100, 210), 1),
+                ("carriage_base (ABS flat)", va_cbase, (60, 180, 255), 3),
+                ("carriage (flat back)", va_carr, (70, 220, 120), 2),
+                ("[a]_duct (flat top)", va_aduct, (255, 200, 30), 2),
+                ("duct_extension (stock len)", va_dext, (0, 230, 230), 3),
+                ("Nema 14 Stepper", ca["stepper"], (240, 130, 180), 2),
+                ("5015_adapter (18mm gap)", ca["adapter5015"], (150, 210, 160), 2),
+                ("led_mount", ca["ledm"], (255, 140, 60), 2),
+                ("siboor_carto_mount", va_scarto, (255, 110, 220), 2),
+                ("LineuxTool", ca["tool"], (190, 120, 255), 1),
+                ("hotend_shroud", ca["shroud"], (160, 100, 210), 1),
             ],
         ),
         (
-            "Variant B (Forked Integrated [a]_duct) — Centerline Airflow Section (X = 126.70 mm)",
+            "Variant B: Ultra-Compact Integrated carriage (dY = -8.5 mm, dZ = +2.5 mm) — Centerline X = 126.70 mm",
             126.70,
-            920,
+            950,
             [
-                ("MGN12H", mgn, (130, 135, 145), 2),
+                ("MGN12H / 2020", mgn, (130, 135, 145), 2),
+                ("2020 Extrusion", ext2020, (90, 95, 105), 1),
                 ("siboorCNC", siboor_body, (255, 70, 90), 3),
-                ("carriage (mod)", vb_carr, (70, 220, 120), 2),
-                ("[a]_duct (expanded)", vb_aduct, (255, 200, 30), 3),
-                ("duct_extension (mod)", vb_dext, (0, 220, 240), 3),
-                ("led_mount", ledm, (255, 140, 60), 2),
-                ("cartographer_mount", carto, (140, 170, 255), 1),
-                ("siboor_carto_mount", vb_scarto, (255, 110, 200), 2),
-                ("LineuxTool", tool, (190, 120, 255), 1),
-                ("hotend_shroud", shroud, (160, 100, 210), 1),
+                ("carriage (tucked duct)", vb_carr, (70, 220, 120), 3),
+                ("[a]_duct (flat top)", vb_aduct, (255, 200, 30), 2),
+                ("duct_extension (stock len)", vb_dext, (0, 230, 230), 3),
+                ("Nema 14 Stepper", cb["stepper"], (240, 130, 180), 2),
+                ("5015_adapter (18mm gap)", cb["adapter5015"], (150, 210, 160), 2),
+                ("led_mount", cb["ledm"], (255, 140, 60), 2),
+                ("siboor_carto_mount", vb_scarto, (255, 110, 220), 2),
+                ("LineuxTool", cb["tool"], (190, 120, 255), 1),
+                ("hotend_shroud", cb["shroud"], (160, 100, 210), 1),
             ],
         ),
     ]
 
     for title, x_val, x_off, p_list in panels:
-        for yg in range(100, 210, 10):
+        for yg in range(100, 225, 10):
             p1 = to_px(yg, -5, x_off)
-            p2 = to_px(yg, 145, x_off)
+            p2 = to_px(yg, 155, x_off)
             draw.line([p1, p2], fill=(32, 36, 46), width=1)
             if yg % 20 == 0:
                 draw.text((p1[0] - 14, H - 70), f"Y={yg}", fill=(130, 140, 160))
-        for zg in range(0, 145, 10):
+        for zg in range(0, 155, 10):
             p1 = to_px(95, zg, x_off)
-            p2 = to_px(205, zg, x_off)
+            p2 = to_px(220, zg, x_off)
             draw.line([p1, p2], fill=(32, 36, 46), width=1)
             draw.text((x_off, p1[1] - 6), f"Z={zg}", fill=(130, 140, 160))
 
@@ -124,19 +141,20 @@ def render_variant_comparison(out_dir: str):
                 if len(pts) >= 2:
                     draw.line(pts, fill=col, width=w)
             if "[a]_duct" in pname:
-                arm_segs = section_wires_2d(pshape, "X", 112.00)
+                arm_segs = section_wires_2d(pshape, "X", 110.45)
                 for seg in arm_segs:
-                    if all(z <= 44.5 for _, z in seg):
+                    if all(z <= 47.0 for _, z in seg):
                         pts = [to_px(y, z, x_off) for y, z in seg]
                         if len(pts) >= 2:
                             draw.line(pts, fill=(215, 155, 25), width=2)
 
-    # Legend at bottom
-    lx = 40
+    lx = 30
     for pname, _, col, _ in panels[0][3]:
-        draw.rectangle([lx, H - 35, lx + 16, H - 21], fill=col)
-        draw.text((lx + 22, H - 36), pname, fill=(220, 225, 235))
-        lx += 170
+        if pname == "2020 Extrusion":
+            continue
+        draw.rectangle([lx, H - 35, lx + 14, H - 21], fill=col)
+        draw.text((lx + 18, H - 36), pname, fill=(220, 225, 235))
+        lx += 150
 
     out_path = os.path.join(out_dir, "siboor_lineux_variants_ab_centerline_2d.png")
     img.save(out_path)
@@ -147,54 +165,51 @@ def render_variant_comparison(out_dir: str):
     draw2 = ImageDraw.Draw(img2)
 
     z_levels = [
-        ("Z = 73.02 mm (Upper Standoffs & Plenum)", 73.02, 310),
-        ("Z = 58.32 mm (Mid-Carriage & Vertical Air Channel)", 58.32, 660),
-        ("Z = 29.72 mm (Lower Standoffs, [a]_duct, LED & Cartographer)", 29.72, 1010),
+        ("Z = 73.02 mm (Upper Standoffs & Air Manifold)", 73.02, 360),
+        ("Z = 58.32 mm (Mid-Carriage & Tucked Air Channel)", 58.32, 740),
+        ("Z = 29.72 mm (Lower Standoffs & [a]_duct Bypass)", 29.72, 1120),
     ]
     for col_idx, (vtitle, x_off, vparts) in enumerate(
         [
             (
-                "Variant A (Modular Carriage)",
-                60,
+                "Variant A: Separate ABS carriage_base (dY = -14.0 mm, dZ = +2.5 mm)",
+                40,
                 [
                     ("siboorCNC", siboor_body, (255, 70, 90), 3),
+                    ("carriage_base", va_cbase, (60, 180, 255), 3),
                     ("carriage", va_carr, (70, 220, 120), 2),
                     ("[a]_duct", va_aduct, (255, 200, 30), 2),
-                    ("duct_extension", va_dext, (0, 220, 240), 2),
-                    ("led_mount", ledm, (255, 140, 60), 2),
-                    ("carto_mount", carto, (140, 170, 255), 1),
-                    ("LineuxTool", tool, (190, 120, 255), 1),
+                    ("led_mount", ca["ledm"], (255, 140, 60), 2),
+                    ("LineuxTool", ca["tool"], (190, 120, 255), 1),
                 ],
             ),
             (
-                "Variant B (Forked Integrated [a]_duct)",
-                940,
+                "Variant B: Ultra-Compact Integrated carriage (dY = -8.5 mm, dZ = +2.5 mm)",
+                950,
                 [
                     ("siboorCNC", siboor_body, (255, 70, 90), 3),
-                    ("carriage", vb_carr, (70, 220, 120), 2),
-                    ("[a]_duct (expanded)", vb_aduct, (255, 200, 30), 3),
-                    ("duct_extension", vb_dext, (0, 220, 240), 2),
-                    ("led_mount", ledm, (255, 140, 60), 2),
-                    ("carto_mount", carto, (140, 170, 255), 1),
-                    ("LineuxTool", tool, (190, 120, 255), 1),
+                    ("carriage", vb_carr, (70, 220, 120), 3),
+                    ("[a]_duct", vb_aduct, (255, 200, 30), 3),
+                    ("led_mount", cb["ledm"], (255, 140, 60), 2),
+                    ("LineuxTool", cb["tool"], (190, 120, 255), 1),
                 ],
             ),
         ]
     ):
-        for zlabel, zval, y_base in z_levels:
+        for rtitle, zv, y_base in z_levels:
             def to_px_xy(x, y):
-                return (int(x_off + (x - 95.0) * 11.5), int(y_base - (185.0 - y) * 4.2))
+                sc = 4.6
+                return (int(x_off + (x - 90.0) * sc), int(y_base - (180.0 - y) * sc))
 
-            draw2.text((x_off, y_base - 290), f"{vtitle} — {zlabel}", fill=(240, 242, 250))
-            for xg in range(100, 160, 10):
-                draw2.line([to_px_xy(xg, 120), to_px_xy(xg, 185)], fill=(32, 36, 46), width=1)
-            for yg in range(120, 190, 10):
-                draw2.line([to_px_xy(95, yg), to_px_xy(160, yg)], fill=(32, 36, 46), width=1)
-                draw2.text((x_off - 42, to_px_xy(95, yg)[1] - 6), f"Y={yg}", fill=(120, 130, 150))
-
+            draw2.text((x_off + 10, y_base - 340), f"{vtitle} — {rtitle}", fill=(240, 242, 250))
+            for yg in range(120, 185, 10):
+                p1, p2 = to_px_xy(92, yg), to_px_xy(162, yg)
+                draw2.line([p1, p2], fill=(32, 36, 46), width=1)
+                draw2.text((x_off, p1[1] - 6), f"Y={yg}", fill=(120, 130, 150))
             for pname, pshape, col, w in vparts:
-                for seg in section_wires_2d(pshape, "Z", zval):
-                    pts = [to_px_xy(x, y) for x, y in seg if 115 <= y <= 188]
+                segs = section_wires_2d(pshape, "Z", zv)
+                for seg in segs:
+                    pts = [to_px_xy(x, y) for x, y in seg]
                     if len(pts) >= 2:
                         draw2.line(pts, fill=col, width=w)
 
@@ -204,6 +219,5 @@ def render_variant_comparison(out_dir: str):
 
 
 if __name__ == "__main__":
-    render_variant_comparison(
-        r"C:\Users\ksall\.gemini\antigravity\brain\fb7972a7-fa05-4a46-93ba-b2edb764e327"
-    )
+    artifact_dir = r"C:\Users\ksall\.gemini\antigravity\brain\fb7972a7-fa05-4a46-93ba-b2edb764e327"
+    render_variant_comparison(artifact_dir)

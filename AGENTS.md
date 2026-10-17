@@ -16,11 +16,15 @@ These rules and boundaries govern the **Siboor Lineux Mod** project and MUST be 
    - Part-cooling air enters through `duct_extension` (from `5015_adapter` / 5015 blower fan) and exits ONLY at the bottom nozzle outlets of `[a]_duct`.
    - There MUST be **zero gaps, holes, or unsealed seams** where air can escape between `duct_extension`, the bridge/carriage channel, and `[a]_duct`.
    - Maintain proper internal cross-sectional airflow area/volume throughout the transition around/under `siboorCNC` (widening/deepening the carriage/duct in `-Y` as needed).
-4. **Two Design Variants (Standard vs. Forked Integrated `[a]_duct`):**
-   - **Design A (Standard / Modular):** Modified `carriage` (and minimal supporting parts) routes airflow and mounts to `siboorCNC`, mating with `[a]_duct` and `duct_extension`.
-   - **Design B (Forked / Expanded `[a]_duct` Integration):** If the unit is widened in `-Y`, expand `[a]_duct` upward/rearward to integrate directly with `siboorCNC` and connect directly to `duct_extension` (modifying `duct_extension` as needed for a sealed joint).
-5. **Toolhead Compatibility Verification (`LineuxTool.step`):**
-   - Every design iteration MUST be verified against `inputs/LineuxTool.step` (shifted by the same $\Delta Y$ carriage offset) to guarantee full mechanical clearance, proper dovetail/latch engagement, magnet/pin alignment, and hotend shroud / nozzle clearance relative to `[a]_duct`.
+4. **Two Design Variants (Separate ABS-Printable `carriage_base` vs. Ultra-Compact Integrated `carriage`):**
+   - **Variant A (`Variant_A_Separate_Carriage_Base_14mm`, $\Delta Y = -14.0\text{ mm}, \Delta Z = +2.5\text{ mm}$):** Dedicated ABS-printable `carriage_base` with a 100% flat front build-plate face, flat-backed `carriage`, and flat-top `[a]_duct` with downward/female telescopic spigot sealing.
+   - **Variant B (`Variant_B_Integrated_Carriage_UltraCompact_8.5mm`, $\Delta Y = -8.5\text{ mm}, \Delta Z = +2.5\text{ mm}$):** Ultra-compact depth tucking the vertical air channel inside `siboorCNC`'s central front pocket, integrated `carriage`, and flat-top `[a]_duct` with contoured lower-standoff relief and forward internal air bypass.
+5. **ABS 3D Printability & Support-Free Channels (Mandatory):**
+   - All modified printed parts MUST be designed for **ABS 3D printing** with a **flat primary build-plate face** (e.g., flat top face on `[a]_duct` for upside-down printing, flat front face on `carriage_base`, flat rear face on `carriage`) and **zero unreachable internal supports** inside any airflow channel.
+6. **Stock 5015 Standoff Spacing ($18\text{ mm}$ Behind Stepper Motor):**
+   - Shift `5015_adapter` and `5015 Blower Fan` by the same $(\Delta Y, \Delta Z)$ as `carriage` and `Nema 14 Stepper` so `5015_standoff_x2` remains 100% stock length ($37.76\text{ mm}$ = $20\text{ mm}$ stepper motor + $17.76\text{ mm} \approx 18\text{ mm}$ space to `5015_adapter`).
+7. **Toolhead Compatibility Verification (`LineuxTool.step`):**
+   - Every design iteration MUST be verified against `inputs/LineuxTool.step` (shifted by the same $(\Delta Y, \Delta Z)$ carriage offset) to guarantee full mechanical clearance, proper dovetail/latch engagement, magnet/pin alignment, and hotend shroud / nozzle clearance relative to `[a]_duct`.
 
 ---
 
