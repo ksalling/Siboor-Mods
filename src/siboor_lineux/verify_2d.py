@@ -1,11 +1,12 @@
-"""2D Cross-Section Verification & Diagnostic Plotter for Iteration 2 (Variant A & Variant B).
+"""2D Cross-Section Verification & Diagnostic Plotter for Iteration 3 (Option A Flyover Architecture).
 
 Slices all generated BREP solids and assembly components using 2D planes ONLY
 (`BRepAlgoAPI_Section`) to verify:
 - Sealed airflow path from `duct_extension` through `carriage_base` / `carriage` to bottom nozzle outlets of `[a]_duct`
-- 100% flat build-plate faces (`Z=47.32 mm` on `[a]_duct`, `Y=146.10 mm` on `carriage_base` & `carriage`) for support-free ABS printing
+- 100% flat build-plate faces (`Z=52.82 mm` on `[a]_duct`, `Y=146.10 mm` on `carriage_base` & `carriage`) for support-free ABS printing
 - Exact 18 mm spacing between `Nema 14 Stepper` and `5015_adapter` using stock 37.76 mm `5015_standoff_x2`
-- Zero collisions with `siboorCNC`, `MGN12H`, `Nema 14 Stepper`, `led_mount`, `cartographer_mount`, and `LineuxTool`
+- All 4 siboorCNC threaded standoffs (Upper at Z=73.02 mm, Lower at Z=29.72 mm) verified with solid fastener connections, counterbores, and hex-driver access
+- Top duct_extension fastener sleeves (Z=89.57 mm) verified to pass 100% ABOVE siboorCNC's top ears (Zmax=86.57 mm) with zero collisions
 """
 
 import json
@@ -73,14 +74,14 @@ def render_variant_comparison(out_dir: str):
     draw = ImageDraw.Draw(img)
 
     def to_px(y, z, x_off=0, y_top=40):
-        scale = 5.4
+        scale = 5.2
         px = int(x_off + (y - 95.0) * scale)
-        py = int(y_top + 900 - (z + 6.0) * scale)
+        py = int(y_top + 920 - (z + 6.0) * scale)
         return (px, py)
 
     panels = [
         (
-            "Variant A: Separate ABS carriage_base (dY = -14.0 mm, dZ = +2.5 mm) — Centerline X = 126.70 mm",
+            "Variant A: Separate ABS carriage_base (dY = -14.0 mm, dZ = +8.0 mm) — Centerline X = 126.70 mm",
             126.70,
             40,
             [
@@ -90,7 +91,7 @@ def render_variant_comparison(out_dir: str):
                 ("carriage_base (ABS flat)", va_cbase, (60, 180, 255), 3),
                 ("carriage (flat back)", va_carr, (70, 220, 120), 2),
                 ("[a]_duct (flat top)", va_aduct, (255, 200, 30), 2),
-                ("duct_extension (stock len)", va_dext, (0, 230, 230), 3),
+                ("duct_extension (flyover)", va_dext, (0, 230, 230), 3),
                 ("Nema 14 Stepper", ca["stepper"], (240, 130, 180), 2),
                 ("5015_adapter (18mm gap)", ca["adapter5015"], (150, 210, 160), 2),
                 ("led_mount", ca["ledm"], (255, 140, 60), 2),
@@ -100,7 +101,7 @@ def render_variant_comparison(out_dir: str):
             ],
         ),
         (
-            "Variant B: Ultra-Compact Integrated carriage (dY = -8.5 mm, dZ = +2.5 mm) — Centerline X = 126.70 mm",
+            "Variant B: Ultra-Compact Integrated carriage (dY = -8.5 mm, dZ = +8.0 mm) — Centerline X = 126.70 mm",
             126.70,
             950,
             [
@@ -109,7 +110,7 @@ def render_variant_comparison(out_dir: str):
                 ("siboorCNC", siboor_body, (255, 70, 90), 3),
                 ("carriage (tucked duct)", vb_carr, (70, 220, 120), 3),
                 ("[a]_duct (flat top)", vb_aduct, (255, 200, 30), 2),
-                ("duct_extension (stock len)", vb_dext, (0, 230, 230), 3),
+                ("duct_extension (flyover)", vb_dext, (0, 230, 230), 3),
                 ("Nema 14 Stepper", cb["stepper"], (240, 130, 180), 2),
                 ("5015_adapter (18mm gap)", cb["adapter5015"], (150, 210, 160), 2),
                 ("led_mount", cb["ledm"], (255, 140, 60), 2),
@@ -123,11 +124,11 @@ def render_variant_comparison(out_dir: str):
     for title, x_val, x_off, p_list in panels:
         for yg in range(100, 225, 10):
             p1 = to_px(yg, -5, x_off)
-            p2 = to_px(yg, 155, x_off)
+            p2 = to_px(yg, 165, x_off)
             draw.line([p1, p2], fill=(32, 36, 46), width=1)
             if yg % 20 == 0:
                 draw.text((p1[0] - 14, H - 70), f"Y={yg}", fill=(130, 140, 160))
-        for zg in range(0, 155, 10):
+        for zg in range(0, 165, 10):
             p1 = to_px(95, zg, x_off)
             p2 = to_px(220, zg, x_off)
             draw.line([p1, p2], fill=(32, 36, 46), width=1)
@@ -143,7 +144,7 @@ def render_variant_comparison(out_dir: str):
             if "[a]_duct" in pname:
                 arm_segs = section_wires_2d(pshape, "X", 110.45)
                 for seg in arm_segs:
-                    if all(z <= 47.0 for _, z in seg):
+                    if all(z <= 52.8 for _, z in seg):
                         pts = [to_px(y, z, x_off) for y, z in seg]
                         if len(pts) >= 2:
                             draw.line(pts, fill=(215, 155, 25), width=2)
@@ -160,36 +161,38 @@ def render_variant_comparison(out_dir: str):
     img.save(out_path)
     print(f"Saved {out_path}")
 
-    # Second image: Z-slices (Top-down XY views) at Z=73.02, Z=58.32, Z=29.72 for Variant A and Variant B
+    # Second image: Z-slices (Top-down XY views) at Z=89.57, Z=73.02, Z=29.72 for Variant A and Variant B
     img2 = Image.new("RGB", (W, H), (16, 18, 24))
     draw2 = ImageDraw.Draw(img2)
 
     z_levels = [
-        ("Z = 73.02 mm (Upper Standoffs & Air Manifold)", 73.02, 360),
-        ("Z = 58.32 mm (Mid-Carriage & Tucked Air Channel)", 58.32, 740),
-        ("Z = 29.72 mm (Lower Standoffs & [a]_duct Bypass)", 29.72, 1120),
+        ("Z = 89.57 mm (5015 Fastener Sleeves Flying Cleanly Over Siboor CNC)", 89.57, 360),
+        ("Z = 73.02 mm (Upper Standoffs Fastener Engagement & Driver Access)", 73.02, 740),
+        ("Z = 29.72 mm (Lower Standoffs & Sealed [a]_duct Through-Sleeves)", 29.72, 1120),
     ]
     for col_idx, (vtitle, x_off, vparts) in enumerate(
         [
             (
-                "Variant A: Separate ABS carriage_base (dY = -14.0 mm, dZ = +2.5 mm)",
+                "Variant A: Separate ABS carriage_base (dY = -14.0 mm, dZ = +8.0 mm)",
                 40,
                 [
                     ("siboorCNC", siboor_body, (255, 70, 90), 3),
                     ("carriage_base", va_cbase, (60, 180, 255), 3),
                     ("carriage", va_carr, (70, 220, 120), 2),
                     ("[a]_duct", va_aduct, (255, 200, 30), 2),
+                    ("duct_extension", va_dext, (0, 230, 230), 2),
                     ("led_mount", ca["ledm"], (255, 140, 60), 2),
                     ("LineuxTool", ca["tool"], (190, 120, 255), 1),
                 ],
             ),
             (
-                "Variant B: Ultra-Compact Integrated carriage (dY = -8.5 mm, dZ = +2.5 mm)",
+                "Variant B: Ultra-Compact Integrated carriage (dY = -8.5 mm, dZ = +8.0 mm)",
                 950,
                 [
                     ("siboorCNC", siboor_body, (255, 70, 90), 3),
                     ("carriage", vb_carr, (70, 220, 120), 3),
                     ("[a]_duct", vb_aduct, (255, 200, 30), 3),
+                    ("duct_extension", vb_dext, (0, 230, 230), 2),
                     ("led_mount", cb["ledm"], (255, 140, 60), 2),
                     ("LineuxTool", cb["tool"], (190, 120, 255), 1),
                 ],
@@ -199,10 +202,10 @@ def render_variant_comparison(out_dir: str):
         for rtitle, zv, y_base in z_levels:
             def to_px_xy(x, y):
                 sc = 4.6
-                return (int(x_off + (x - 90.0) * sc), int(y_base - (180.0 - y) * sc))
+                return (int(x_off + (x - 90.0) * sc), int(y_base - (190.0 - y) * sc))
 
             draw2.text((x_off + 10, y_base - 340), f"{vtitle} — {rtitle}", fill=(240, 242, 250))
-            for yg in range(120, 185, 10):
+            for yg in range(120, 195, 10):
                 p1, p2 = to_px_xy(92, yg), to_px_xy(162, yg)
                 draw2.line([p1, p2], fill=(32, 36, 46), width=1)
                 draw2.text((x_off, p1[1] - 6), f"Y={yg}", fill=(120, 130, 150))

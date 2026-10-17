@@ -23,7 +23,11 @@ These rules and boundaries govern the **Siboor Lineux Mod** project and MUST be 
    - All modified printed parts MUST be designed for **ABS 3D printing** with a **flat primary build-plate face** (e.g., flat top face on `[a]_duct` for upside-down printing, flat front face on `carriage_base`, flat rear face on `carriage`) and **zero unreachable internal supports** inside any airflow channel.
 6. **Stock 5015 Standoff Spacing ($18\text{ mm}$ Behind Stepper Motor):**
    - Shift `5015_adapter` and `5015 Blower Fan` by the same $(\Delta Y, \Delta Z)$ as `carriage` and `Nema 14 Stepper` so `5015_standoff_x2` remains 100% stock length ($37.76\text{ mm}$ = $20\text{ mm}$ stepper motor + $17.76\text{ mm} \approx 18\text{ mm}$ space to `5015_adapter`).
-7. **Toolhead Compatibility Verification (`LineuxTool.step`):**
+7. **Mandatory Fastener Accounting & Collision Verification:**
+   - Every single part connection must be accounted for with real, verifiable fasteners (screws, heat-set inserts, counterbores, driver clearance, and thread engagement).
+   - All 4 main `siboorCNC` threaded mounting standoffs (Upper-Left `111.20, 73.02`, Upper-Right `142.20, 73.02`, Lower-Left `110.45, 29.72`, Lower-Right `142.95, 29.72` at $Y = 155.00\text{ mm}$) must connect solidly with verified fastener heads, counterbores, and alignment.
+   - All fastener paths (such as the two lower bolts from `5015_adapter` through `duct_extension`) must be verified to have zero collisions with solid sections of `siboorCNC`.
+8. **Toolhead Compatibility Verification (`LineuxTool.step`):**
    - Every design iteration MUST be verified against `inputs/LineuxTool.step` (shifted by the same $(\Delta Y, \Delta Z)$ carriage offset) to guarantee full mechanical clearance, proper dovetail/latch engagement, magnet/pin alignment, and hotend shroud / nozzle clearance relative to `[a]_duct`.
 
 ---
