@@ -162,13 +162,15 @@ def render_variant_comparison(out_dir: str):
     print(f"Saved {out_path}")
 
     # Second image: Z-slices (Top-down XY views) at Z=89.57, Z=73.02, Z=29.72 for Variant A and Variant B
-    img2 = Image.new("RGB", (W, H), (16, 18, 24))
+    H2 = 1520
+    img2 = Image.new("RGB", (W, H2), (16, 18, 24))
     draw2 = ImageDraw.Draw(img2)
 
     z_levels = [
         ("Z = 89.57 mm (5015 Fastener Sleeves Flying Cleanly Over Siboor CNC)", 89.57, 360),
         ("Z = 73.02 mm (Upper Standoffs Fastener Engagement & Driver Access)", 73.02, 740),
-        ("Z = 29.72 mm (Lower Standoffs & Sealed [a]_duct Through-Sleeves)", 29.72, 1120),
+        ("Z = 39.05 mm (Lower Mounting Screws & Insets Aligned with Siboor CNC Tapped Holes)", 39.05, 1120),
+        ("Z = 29.72 mm (Lower Standoff Level: Cooling Arms 100% Unpierced & Continuous)", 29.72, 1480),
     ]
     for col_idx, (vtitle, x_off, vparts) in enumerate(
         [
