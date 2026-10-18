@@ -173,6 +173,8 @@ def build_led_mount(raw_ledm: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shap
     """Modifies stock led_mount:
     - Shifts by (dy, dz) = (-14.0 mm, +8.0 mm).
     - Plugs old mounting holes at X=119.55, 133.85, Z=38.47.
+      The hole in stock led_mount strictly spans Y in [148.10, 152.10] (shifted) with r=1.70 mm.
+      Plugging strictly within [148.05, 152.15] prevents any forward projection into [a]_duct!
     - Cuts new mounting holes at X=121.45, 131.95 mm, Z=39.05 mm (dia 3.4 mm clearance holes),
       aligning 100% with carriage, [a]_duct, carriage_base, and SiboorCNC tapped holes.
     - Trims lower legs below Z=25.0 mm to completely eliminate collision with
@@ -180,14 +182,14 @@ def build_led_mount(raw_ledm: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shap
     """
     ledm_sh = translate_shape(raw_ledm, 0, dy, dz)
 
-    # Plug old holes at X=119.55, 133.85, Z=38.47
-    plug_l = make_cyl_y(119.55, 30.469 + dz, 145.0, 165.0, 3.5)
-    plug_r = make_cyl_y(133.85, 30.469 + dz, 145.0, 165.0, 3.5)
+    # Plug old holes strictly within the stock hole depth (Y=148.05..152.15, r=1.75 mm)
+    plug_l = make_cyl_y(119.55, 30.469 + dz, 148.05, 152.15, 1.75)
+    plug_r = make_cyl_y(133.85, 30.469 + dz, 148.05, 152.15, 1.75)
     ledm_plugged = fuse_shapes([ledm_sh, plug_l, plug_r])
 
     # Cut new holes at (121.45, 39.05) and (131.95, 39.05)
-    cut_hl = make_cyl_y(121.45, 39.05, 145.0, 165.0, 1.70)
-    cut_hr = make_cyl_y(131.95, 39.05, 145.0, 165.0, 1.70)
+    cut_hl = make_cyl_y(121.45, 39.05, 145.0, 155.0, 1.70)
+    cut_hr = make_cyl_y(131.95, 39.05, 145.0, 155.0, 1.70)
 
     # Trim lower legs below Z=25.0 mm
     cut_lower = make_box(100.0, 140.0, 10.0, 160.0, 175.0, 25.0)
@@ -244,10 +246,10 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     low_rib_l = make_box(105.00, front_y, 40.74, 114.50, 165.10, 47.32 + dz)
     low_rib_r = make_box(138.90, front_y, 40.74, 148.40, 165.10, 47.32 + dz)
 
-    # Lower mounting bosses and rear web behind aduct down to Z=36.00 mm:
-    rear_web_low = make_box(114.20, 155.50, 36.00, 139.20, 165.10, 47.00)
-    low_boss_l = make_box(118.50, 148.10, 36.00, 124.40, 165.10, 42.10)
-    low_boss_r = make_box(129.00, 148.10, 36.00, 134.90, 165.10, 42.10)
+    # Lower mounting bosses and rear web behind aduct and led_mount down to Z=36.00 mm:
+    rear_web_low = make_box(114.20, 156.40, 36.00, 139.20, 165.10, 47.00)
+    low_boss_l = make_box(118.50, 156.40, 36.00, 124.40, 165.10, 42.10)
+    low_boss_r = make_box(129.00, 156.40, 36.00, 134.90, 165.10, 42.10)
 
     cbase_solid = fuse_shapes([
         base_core, top_ear_l, top_ear_r,
@@ -295,6 +297,8 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # M. Belt clamp plates, screws, and B Belt path rear reliefs on left and right wings:
         make_box(103.00, 160.50, 40.00, 112.50, 166.00, 72.00),
         make_box(138.50, 160.50, 40.00, 150.50, 166.00, 72.00),
+        # N. Pocket for led_mount top & front clearance:
+        make_box(115.50, 145.00, 35.00, 137.50, 156.40, 42.50),
     ]
 
     cbase_body = cut_shapes(cbase_solid, cbase_cuts)

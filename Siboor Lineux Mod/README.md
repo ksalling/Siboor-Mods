@@ -19,8 +19,10 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
 
 3. **Modified `led_mount` (`led_mount.step` / `led_mount.stl`):**
    - **Hole Alignment:** Stock Lineux `led_mount` holes at $X = 119.55, 133.85$ ($Z = 38.47$) have been repositioned to **$X = 121.45, 131.95\text{ mm}$ and $Z = 39.05\text{ mm}$**, matching `carriage`, `[a]_duct`, `carriage_base`, and `siboorCNC` 100% concentrically.
-   - **Trimmed Lower Legs:** Lower extended legs trimmed below $Z = 25.0\text{ mm}$. The LED bracket is rigidly supported by the two M3 clamping screws at $Z = 39.05\text{ mm}$, completely eliminating collisions with lower hardware.
-   - Zero collisions verified with `BRepAlgoAPI_Common`.
+   - **Zero Collision with `[a]_duct`:** The stock hole in `led_mount` strictly spans $Y \in [148.10, 152.10]$ (shifted). In Iteration 5.1, hole plugging is strictly confined to $Y \in [148.05, 152.15]$ ($r = 1.75\text{ mm}$), completely eliminating the forward cylindrical protrusion ($Y < 148.10$) that previously intersected `[a]_duct`'s mounting tab.
+   - **Trimmed Lower Legs:** Lower extended legs trimmed below $Z = 25.0\text{ mm}$. The LED bracket is rigidly supported by the two M3 clamping screws at $Z = 39.05\text{ mm}$, completely eliminating collisions with lower hardware and Cartographer probe mount.
+   - **`carriage_base` Clearance Pocket:** `carriage_base` includes a dedicated relief pocket ($X \in [115.5, 137.5]$, $Y \in [145.0, 156.4]$, $Z \in [35.0, 42.5]$) with rear clamping bosses at $Y \in [156.40, 165.10]$.
+   - Zero solid-body collisions verified with `BRepAlgoAPI_Common` across all adjacent parts (`led_mount` vs. `[a]_duct` = 0 solids, `led_mount` vs. `carriage_base` = 0 solids).
 
 4. **Dedicated Cartographer Probe Mount (`siboor_cartographer_mount`):**
    - Stock Lineux probe mounts (`cartographer_mount`, etc.) have been removed from the assembly to prevent duplicate mounts and interference.
