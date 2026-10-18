@@ -245,15 +245,16 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
 
     # --- 1. Dedicated ABS-Printable `carriage_base` ---
     # Prints FLAT on its Y=146.10 mm front face on the build plate with ZERO internal supports!
-    base_core = make_box(103.70, front_y, 40.74, 149.70, base_rear_y, 84.43 + dz)
+    leg_bot_z = 38.32 + dz      # 46.32 mm (bottom of side mounting tabs; 3.25 mm margin below side M3 screw at Z=49.57 mm)
+    base_core = make_box(103.70, front_y, leg_bot_z, 149.70, base_rear_y, 84.43 + dz)
     top_ear_l = make_box(108.48, front_y, 86.00, 115.50, base_rear_y, 95.00)
     top_ear_r = make_box(137.90, front_y, 86.00, 144.92, base_rear_y, 95.00)
 
     # Rear columns and backing web mating to siboorCNC (Y=165.10 mm):
     col_l = make_box(114.20, front_y, 47.00, 121.80, 165.10, 70.00)
     col_r = make_box(131.60, front_y, 47.00, 139.20, 165.10, 70.00)
-    low_rib_l = make_box(105.00, front_y, 40.74, 114.50, 165.10, 47.32 + dz)
-    low_rib_r = make_box(138.90, front_y, 40.74, 148.40, 165.10, 47.32 + dz)
+    low_rib_l = make_box(105.00, front_y, leg_bot_z, 114.50, 165.10, 47.32 + dz)
+    low_rib_r = make_box(138.90, front_y, leg_bot_z, 148.40, 165.10, 47.32 + dz)
 
     # Lower mounting bosses meeting led_mount standoffs flush at Y=155.50 mm:
     rear_web_low = make_box(114.20, 156.40, 36.00, 139.20, 165.10, 47.00)
@@ -270,8 +271,8 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # A. Relief at Y=155.00..156.00 for siboorCNC's upper forward standoffs (X=104.2..115.2 and 138.2..150.4, Z=69.5..76.2)
         make_box(103.00, 155.00, 69.50, 115.20, 156.00, 76.20),
         make_box(138.20, 155.00, 69.50, 150.40, 156.00, 76.20),
-        # B. Full bottom arch cutout so [a]_duct's flat Z=52.82 top face seats flush
-        make_box(109.50, front_y - 0.5, 39.00, 143.90, 155.50, aduct_top_z),
+        # B. Full bottom arch cutout so [a]_duct's flat Z=52.82 top face seats flush (widened to X=106.30..147.10, Y to 156.00)
+        make_box(106.30, front_y - 0.5, 35.00, 147.10, 156.00, aduct_top_z),
         # C. Relief for aduct lower mounting tab at Z=36..42 mm
         make_box(118.00, front_y - 0.5, 36.00, 135.00, 148.10, 42.10),
         # D. Straight-through vertical internal airflow channel (100% HERMETICALLY SEALED - ZERO LEAKS!)
@@ -286,9 +287,9 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_cyl_y(140.50, 76.569 + dz, front_y - 1.0, front_y + 6.5, 2.35),
         make_cyl_y(106.20, 49.319 + dz, front_y - 1.0, front_y + 6.5, 2.35),
         make_cyl_y(147.20, 49.319 + dz, front_y - 1.0, front_y + 6.5, 2.35),
-        # H. Top duct_extension M3 straight-through clearance holes (X=111.98, 141.42, Z=81.569+8=89.569)
-        make_cyl_y(111.98, 81.569 + dz, front_y - 1.0, base_rear_y + 1.0, 1.70),
-        make_cyl_y(141.42, 81.569 + dz, front_y - 1.0, base_rear_y + 1.0, 1.70),
+        # H. Top duct_extension M3 straight-through clearance holes aligned to duct_extension at Z=82.319+dz=90.319 mm:
+        make_cyl_y(111.98, 82.319 + dz, front_y - 1.0, base_rear_y + 1.0, 1.70),
+        make_cyl_y(141.42, 82.319 + dz, front_y - 1.0, base_rear_y + 1.0, 1.70),
         # I. Side M3 holes for [a]_duct upper side tabs (Z=41.569+8=49.569, Y=150.8)
         make_cyl_x(103.00, 111.00, 150.80, 41.569 + dz, 1.70),
         make_cyl_x(142.40, 150.40, 150.80, 41.569 + dz, 1.70),

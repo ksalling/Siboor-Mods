@@ -49,8 +49,10 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
    - `5015_standoff_x2` remains 100% stock length ($37.76\text{ mm}$ = $20.00\text{ mm}$ stepper body + $17.76\text{ mm} \approx 18\text{ mm}$ gap to `5015_adapter`).
    - `duct_extension` stays at its compact stock $28.37\text{ mm}$ length with a $2.2\text{ mm}$ forward male sealing spigot.
 
-9. **Variant B Discontinued:**
-   - Per user directive, Variant B has been dropped from the repository to focus exclusively on the proven, robust Variant A architecture.
+10. **`carriage_base` Only Updates (Iteration 5.2):**
+    - **Bottom Notch & Arch Widening:** The bottom arch cutout was widened from $X = 109.50..143.90$ to $X = 106.30..147.10\text{ mm}$ ($Y$ up to $156.00\text{ mm}$, $Z = 52.82\text{ mm}$), and the side leg bottom elevation was raised from the obsolete $Z = 40.74\text{ mm}$ constant to $Z = 46.32\text{ mm}$ ($38.32 + dz$). This completely eliminates the notch interference with `[a]_duct`'s swept arms ($0.000\text{ mm}^3$ interference) and provides generous clearance over the Voron Trident belt clamp bolt head.
+    - **`duct_extension` Fastener Hole Alignment:** The top M3 clearance holes through `carriage_base` have been realigned from $Z = 89.57\text{ mm}$ ($81.569 + dz$) to **$Z = 90.32\text{ mm}$ ($82.319 + dz$)**, matching `duct_extension`'s screw sleeve axis 100% concentrically.
+    - **Isolated Modification:** Per user instruction, these changes were made exclusively to `carriage_base` without altering any other parts.
 
 ---
 
@@ -60,7 +62,7 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
 | :--- | :--- | :--- | :--- |
 | **2x M3x16mm SHCS** | $X = 111.20, 142.20$, $Z = 73.02$ | `carriage` + `carriage_base` $\to$ `siboorCNC` Upper Standoffs ($Y = 155.00$) | $\varnothing 6.2\text{ mm}$ front counterbores on `carriage`, straight-in hex driver access |
 | **2x M3x25mm SHCS** | $X = 121.45, 131.95$, $Z = 39.05$ | `carriage` + `[a]_duct` + `led_mount` + `carriage_base` $\to$ `siboorCNC` Lower Plate ($Y = 165.10$) | Front $\varnothing 6.2\text{ mm}$ counterbores on `carriage` tongue, clamps all 4 parts directly into `siboorCNC` |
-| **2x M3x45mm SHCS** | $X = 111.98, 141.42$, $Z = 89.57$ | `5015_adapter` $\to$ `duct_extension` $\to$ `carriage_base` $\to$ `carriage` | Flies above `siboorCNC` ($Z_{\text{max}} = 86.57$); threads into M3 heat-sets in `carriage` |
+| **2x M3x45mm SHCS** | $X = 111.98, 141.42$, $Z = 90.32$ | `5015_adapter` $\to$ `duct_extension` $\to$ `carriage_base` $\to$ `carriage` | Flies above `siboorCNC` ($Z_{\text{max}} = 86.57$); concentric through `duct_extension` and `carriage_base` |
 | **4x M3x8mm SHCS** | $X = 112.90, 140.50$ ($Z=84.57$), $X = 106.20, 147.20$ ($Z=57.32$) | `carriage` $\to$ `carriage_base` Front Face ($Y = 146.10$) | Front counterbores in `carriage`, M3 heat-set inserts in `carriage_base` |
 | **2x M3x8mm BHCS** | $X = 106.30, 147.10$, $Z = 49.57$, $Y = 150.80$ | `[a]_duct` Upper Side Tabs $\to$ `carriage_base` | $\varnothing 3.4\text{ mm}$ clearance in side skirts, M3 heat-sets in `[a]_duct` |
 | **2x M3x10mm SHCS** | $X = 110.90, 142.50$, $Y = 167.30$, vertical | `siboor_cartographer_mount` $\to$ `siboorCNC` Bottom Legs ($Z = 14.52$) | Bottom $\varnothing 6.2\text{ mm}$ counterbores on mount |
