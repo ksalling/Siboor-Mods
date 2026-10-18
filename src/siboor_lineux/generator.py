@@ -175,6 +175,10 @@ def build_led_mount(raw_ledm: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shap
     - Plugs old mounting holes at X=119.55, 133.85, Z=38.47.
       The hole in stock led_mount strictly spans Y in [148.10, 152.10] (shifted) with r=1.70 mm.
       Plugging strictly within [148.05, 152.15] prevents any forward projection into [a]_duct!
+    - Adds full-depth cylindrical standoff bosses centered on the relocated mounting holes at
+      X=121.45, 131.95 mm, Z=39.05 mm (R=3.25 mm, spanning Y=148.10 to Y=155.50 mm).
+      This ensures led_mount sandwiches snugly and rigidly between [a]_duct (rear face at Y=148.10)
+      and carriage_base (mating boss face at Y=155.50) with zero air gap!
     - Cuts new mounting holes at X=121.45, 131.95 mm, Z=39.05 mm (dia 3.4 mm clearance holes),
       aligning 100% with carriage, [a]_duct, carriage_base, and SiboorCNC tapped holes.
     - Trims lower legs below Z=25.0 mm to completely eliminate collision with
@@ -187,14 +191,19 @@ def build_led_mount(raw_ledm: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shap
     plug_r = make_cyl_y(133.85, 30.469 + dz, 148.05, 152.15, 1.75)
     ledm_plugged = fuse_shapes([ledm_sh, plug_l, plug_r])
 
+    # Concentric full-depth standoff bosses (R=3.25 mm, Y=148.10..155.50 mm)
+    standoff_l = make_cyl_y(121.45, 39.05, 148.10, 155.50, 3.25)
+    standoff_r = make_cyl_y(131.95, 39.05, 148.10, 155.50, 3.25)
+    ledm_bossed = fuse_shapes([ledm_plugged, standoff_l, standoff_r])
+
     # Cut new holes at (121.45, 39.05) and (131.95, 39.05)
-    cut_hl = make_cyl_y(121.45, 39.05, 145.0, 155.0, 1.70)
-    cut_hr = make_cyl_y(131.95, 39.05, 145.0, 155.0, 1.70)
+    cut_hl = make_cyl_y(121.45, 39.05, 145.0, 156.0, 1.70)
+    cut_hr = make_cyl_y(131.95, 39.05, 145.0, 156.0, 1.70)
 
     # Trim lower legs below Z=25.0 mm
     cut_lower = make_box(100.0, 140.0, 10.0, 160.0, 175.0, 25.0)
 
-    return cut_shapes(ledm_plugged, [cut_hl, cut_hr, cut_lower])
+    return cut_shapes(ledm_bossed, [cut_hl, cut_hr, cut_lower])
 
 
 def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shape:
@@ -246,10 +255,10 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     low_rib_l = make_box(105.00, front_y, 40.74, 114.50, 165.10, 47.32 + dz)
     low_rib_r = make_box(138.90, front_y, 40.74, 148.40, 165.10, 47.32 + dz)
 
-    # Lower mounting bosses and rear web behind aduct and led_mount down to Z=36.00 mm:
+    # Lower mounting bosses meeting led_mount standoffs flush at Y=155.50 mm:
     rear_web_low = make_box(114.20, 156.40, 36.00, 139.20, 165.10, 47.00)
-    low_boss_l = make_box(118.50, 156.40, 36.00, 124.40, 165.10, 42.10)
-    low_boss_r = make_box(129.00, 156.40, 36.00, 134.90, 165.10, 42.10)
+    low_boss_l = make_box(118.00, 155.50, 35.50, 124.90, 165.10, 42.60)
+    low_boss_r = make_box(128.50, 155.50, 35.50, 135.40, 165.10, 42.60)
 
     cbase_solid = fuse_shapes([
         base_core, top_ear_l, top_ear_r,
@@ -287,8 +296,8 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_cyl_y(111.20, 73.019, front_y - 1.0, 156.00, 1.70),
         make_cyl_y(142.20, 73.019, front_y - 1.0, 156.00, 1.70),
         # K. Siboor CNC Lower Plate M3 clearance holes (X=121.45, 131.95, Z=39.05 mm) through to Y=165.10 mm:
-        make_cyl_y(121.45, 39.05, front_y - 1.0, 166.00, 1.70),
-        make_cyl_y(131.95, 39.05, front_y - 1.0, 166.00, 1.70),
+        make_cyl_y(121.45, 39.05, 154.50, 166.00, 1.70),
+        make_cyl_y(131.95, 39.05, 154.50, 166.00, 1.70),
         # L. MGN12H block bolt head rear pockets at (116.70, 68.32), (136.70, 68.32), (116.70, 48.32), (136.70, 48.32):
         make_cyl_y(116.70, 68.319, 162.00, 166.00, 3.80),
         make_cyl_y(136.70, 68.319, 162.00, 166.00, 3.80),
@@ -297,8 +306,8 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # M. Belt clamp plates, screws, and B Belt path rear reliefs on left and right wings:
         make_box(103.00, 160.50, 40.00, 112.50, 166.00, 72.00),
         make_box(138.50, 160.50, 40.00, 150.50, 166.00, 72.00),
-        # N. Pocket for led_mount top & front clearance:
-        make_box(115.50, 145.00, 35.00, 137.50, 156.40, 42.50),
+        # N. Pocket for led_mount central bridge clearance (X in [122.5, 130.9], Y in [155.0, 156.4]):
+        make_box(122.50, 145.00, 35.00, 130.90, 156.40, 42.50),
     ]
 
     cbase_body = cut_shapes(cbase_solid, cbase_cuts)

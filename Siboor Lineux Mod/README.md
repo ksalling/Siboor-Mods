@@ -19,9 +19,9 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
 
 3. **Modified `led_mount` (`led_mount.step` / `led_mount.stl`):**
    - **Hole Alignment:** Stock Lineux `led_mount` holes at $X = 119.55, 133.85$ ($Z = 38.47$) have been repositioned to **$X = 121.45, 131.95\text{ mm}$ and $Z = 39.05\text{ mm}$**, matching `carriage`, `[a]_duct`, `carriage_base`, and `siboorCNC` 100% concentrically.
-   - **Zero Collision with `[a]_duct`:** The stock hole in `led_mount` strictly spans $Y \in [148.10, 152.10]$ (shifted). In Iteration 5.1, hole plugging is strictly confined to $Y \in [148.05, 152.15]$ ($r = 1.75\text{ mm}$), completely eliminating the forward cylindrical protrusion ($Y < 148.10$) that previously intersected `[a]_duct`'s mounting tab.
-   - **Trimmed Lower Legs:** Lower extended legs trimmed below $Z = 25.0\text{ mm}$. The LED bracket is rigidly supported by the two M3 clamping screws at $Z = 39.05\text{ mm}$, completely eliminating collisions with lower hardware and Cartographer probe mount.
-   - **`carriage_base` Clearance Pocket:** `carriage_base` includes a dedicated relief pocket ($X \in [115.5, 137.5]$, $Y \in [145.0, 156.4]$, $Z \in [35.0, 42.5]$) with rear clamping bosses at $Y \in [156.40, 165.10]$.
+   - **Full-Depth Standoff Bosses (Snug Sandwich):** Features robust $\varnothing 6.5\text{ mm}$ ($R = 3.25\text{ mm}$) cylindrical standoff bosses centered on the M3 holes, spanning from $Y = 148.10\text{ mm}$ (mating flush to the rear of `[a]_duct`'s tab) to $Y = 155.50\text{ mm}$ (mating flush to the front of `carriage_base`'s bosses).
+   - **Snug Clamp Architecture (Zero Air Gap):** `led_mount` is sandwiched rigidly and snugly between `[a]_duct` and `carriage_base`. Tightening the lower M3 screws clamps all 4 parts (`carriage` $\to$ `[a]_duct` $\to$ `led_mount` $\to$ `carriage_base` $\to$ `siboorCNC`) in continuous solid compression with zero flex or play.
+   - **Trimmed Lower Legs:** Lower extended legs trimmed below $Z = 25.0\text{ mm}$, completely eliminating collisions with lower hardware and Cartographer probe mount.
    - Zero solid-body collisions verified with `BRepAlgoAPI_Common` across all adjacent parts (`led_mount` vs. `[a]_duct` = 0 solids, `led_mount` vs. `carriage_base` = 0 solids).
 
 4. **Dedicated Cartographer Probe Mount (`siboor_cartographer_mount`):**
