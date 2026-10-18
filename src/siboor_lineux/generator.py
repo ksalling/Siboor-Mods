@@ -169,6 +169,32 @@ def build_siboor_cartographer_mount(dz: float = 8.0) -> TopoDS_Shape:
     return cut_shapes(body, [pcb_relief, hole_l, hole_r, cb_l, cb_r])
 
 
+def build_led_mount(raw_ledm: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shape:
+    """Modifies stock led_mount:
+    - Shifts by (dy, dz) = (-14.0 mm, +8.0 mm).
+    - Plugs old mounting holes at X=119.55, 133.85, Z=38.47.
+    - Cuts new mounting holes at X=121.45, 131.95 mm, Z=39.05 mm (dia 3.4 mm clearance holes),
+      aligning 100% with carriage, [a]_duct, carriage_base, and SiboorCNC tapped holes.
+    - Trims lower legs below Z=25.0 mm to completely eliminate collision with
+      siboor_cartographer_mount and leave SiboorCNC's bottom M3 vertical holes exclusively for Cartographer.
+    """
+    ledm_sh = translate_shape(raw_ledm, 0, dy, dz)
+
+    # Plug old holes at X=119.55, 133.85, Z=38.47
+    plug_l = make_cyl_y(119.55, 30.469 + dz, 145.0, 165.0, 3.5)
+    plug_r = make_cyl_y(133.85, 30.469 + dz, 145.0, 165.0, 3.5)
+    ledm_plugged = fuse_shapes([ledm_sh, plug_l, plug_r])
+
+    # Cut new holes at (121.45, 39.05) and (131.95, 39.05)
+    cut_hl = make_cyl_y(121.45, 39.05, 145.0, 165.0, 1.70)
+    cut_hr = make_cyl_y(131.95, 39.05, 145.0, 165.0, 1.70)
+
+    # Trim lower legs below Z=25.0 mm
+    cut_lower = make_box(100.0, 140.0, 10.0, 160.0, 175.0, 25.0)
+
+    return cut_shapes(ledm_plugged, [cut_hl, cut_hr, cut_lower])
+
+
 def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shape:
     """Shifts stock duct_extension by (dy, dz) to match shifted 5015_adapter (keeping stock 37.76 mm standoffs).
     At dz=+8.0 mm, the fastener sleeves pass 100% ABOVE siboorCNC's top ears (Zmax=86.57 mm),
@@ -189,17 +215,18 @@ def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -
 
 def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     """Builds Variant_A_Separate_Carriage_Base_14mm (dY = -14.0 mm, dZ = +8.0 mm).
-    Iteration 4 Features:
-    - 100% hermetically sealed vertical airflow channel in `carriage_base` (all MGN12H, belt, and inner plate access holes removed).
-    - Lower mounting holes in `carriage` and `carriage_base` moved to X=121.45, 131.95, Z=39.05 mm, aligning 100% dead-on
-      with SiboorCNC's tapped holes, complete with M3 SHCS front counterbores (dia 6.2 mm, depth 4.0 mm).
-    - `[a]_duct`'s cooling arms are 100% UNPIERCED by any fasteners or through-sleeves, preserving full stock airflow volume
-      and support-free ABS printability with flat top face at Z=52.82 mm.
+    Iteration 5 Features:
+    - 100% hermetically sealed vertical airflow channel in `carriage_base`.
+    - Blind rear pockets for 4x MGN12H block bolt heads and outer rear wing reliefs for belt clamp mounts & B Belt.
+    - Lower mounting holes in `carriage`, `[a]_duct`, `led_mount`, and `carriage_base` moved to X=121.45, 131.95, Z=39.05 mm.
+    - `[a]_duct`'s cooling arms 100% unpierced by any fasteners.
+    - `led_mount` trimmed below Z=25.0 mm to clear `siboor_cartographer_mount` completely.
     """
     dy, dz = VARIANT_A_DY, VARIANT_A_DZ
     raw_carr = load_brep(carriage_meta["carriage"]["brep"])
     raw_aduct = load_brep(carriage_meta["[a]_duct"]["brep"])
     raw_dext = load_brep(carriage_meta["duct_extension"]["brep"])
+    raw_ledm = load_brep(carriage_meta["led_mount"]["brep"])
 
     front_y = 160.10 + dy       # 146.10 mm (100% flat front face of carriage_base)
     base_rear_y = 169.50 + dy   # 155.50 mm (main rear face of carriage_base)
@@ -260,6 +287,14 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # K. Siboor CNC Lower Plate M3 clearance holes (X=121.45, 131.95, Z=39.05 mm) through to Y=165.10 mm:
         make_cyl_y(121.45, 39.05, front_y - 1.0, 166.00, 1.70),
         make_cyl_y(131.95, 39.05, front_y - 1.0, 166.00, 1.70),
+        # L. MGN12H block bolt head rear pockets at (116.70, 68.32), (136.70, 68.32), (116.70, 48.32), (136.70, 48.32):
+        make_cyl_y(116.70, 68.319, 162.00, 166.00, 3.80),
+        make_cyl_y(136.70, 68.319, 162.00, 166.00, 3.80),
+        make_cyl_y(116.70, 48.319, 162.00, 166.00, 3.80),
+        make_cyl_y(136.70, 48.319, 162.00, 166.00, 3.80),
+        # M. Belt clamp plates, screws, and B Belt path rear reliefs on left and right wings:
+        make_box(103.00, 160.50, 40.00, 112.50, 166.00, 72.00),
+        make_box(138.50, 160.50, 40.00, 150.50, 166.00, 72.00),
     ]
 
     cbase_body = cut_shapes(cbase_solid, cbase_cuts)
@@ -327,11 +362,15 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     # --- 5. Direct Siboor CNC Cartographer Mount ---
     siboor_carto = build_siboor_cartographer_mount(dz=dz)
 
+    # --- 6. Modified LED Mount (trimmed lower legs, aligned upper mounting holes) ---
+    ledm_mod = build_led_mount(raw_ledm, dy, dz)
+
     return {
         "carriage_base": cbase_mod,
         "carriage": carr_mod,
         "[a]_duct": aduct_mod,
         "duct_extension": dext_mod,
+        "led_mount": ledm_mod,
         "siboor_cartographer_mount": siboor_carto,
     }
 
@@ -550,6 +589,8 @@ def export_assembly_step(
         "carriage_base",
         "klicky_mount",
         "btt_eddy_mount",
+        "cartographer_mount",
+        "led_mount",
     }
     for cname, cinfo in carriage_meta.items():
         if cname in skip_parts:
@@ -588,12 +629,6 @@ def export_all_variants():
             build_variant_a_parts(carriage_meta),
             VARIANT_A_DY,
             VARIANT_A_DZ,
-        ),
-        (
-            "Variant_B_Integrated_Carriage_UltraCompact_8.5mm",
-            build_variant_b_parts(carriage_meta),
-            VARIANT_B_DY,
-            VARIANT_B_DZ,
         ),
     ]
 
