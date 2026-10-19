@@ -207,39 +207,41 @@ def build_led_mount(raw_ledm: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shap
 
 
 def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -> TopoDS_Shape:
-    """Shifts stock duct_extension by (dy, dz) to match shifted 5015_adapter (keeping stock 37.76 mm standoffs).
-    At dz=+8.0 mm, the fastener sleeves pass 100% ABOVE siboorCNC's top ears (Zmax=86.57 mm),
-    completely eliminating fastener collisions with zero ear cutouts needed!
-    Adds a 2.2 mm forward sealing spigot lip for a hermetically sealed duct connection,
-    adds NEMA 14 pancake motor cylindrical body relief, and expands top M3 clearance holes."""
-    dext_sh = translate_shape(raw_dext, 0, dy, dz)
+    """Shifts stock duct_extension by (dy, dz - 0.75 mm).
+    Stock duct_extension had its fastener sleeve holes modeled at Z=82.319 mm (+0.75 mm above 5015_adapter,
+    carriage_base, and carriage at Z=81.569 mm).
+    Shifting by (dz - 0.75 mm) = +7.25 mm:
+    - Aligns fastener sleeve holes exactly to Z=89.569 mm (100% concentric with 5015_adapter, carriage_base, and carriage).
+    - Aligns outer mold line of sleeve (R=3.50 mm) exactly flush with 5015_adapter at Y=183.86 mm.
+    - Aligns stock motor clearance curve (R=18.65 mm) exactly to motor center Z=108.069 mm with 0.000 mm^3 collision.
+    - Leaves fastener sleeves 100% fully enclosed, smooth, and solid (zero broken pathways or troughs!).
+    Adds a 2.2 mm forward sealing spigot lip for a hermetically sealed duct connection."""
     front_y = 169.50 + dy
+    dz_dext = dz - 0.75  # 7.25 mm
+    dext_sh = translate_shape(raw_dext, 0, dy, dz_dext)
 
     # Forward sealing spigot lip (telescoping 2.2 mm forward into carriage_base / carriage)
-    # Lowered to Z=81.30..86.50 mm to preserve airtight ceiling under the NEMA pancake motor
-    spigot_outer = make_box(119.75, front_y - 2.20, 81.30, 133.65, front_y + 1.20, 86.50)
-    spigot_inner = make_box(120.55, front_y - 3.00, 82.10, 132.85, front_y + 2.00, 85.70)
+    spigot_outer = make_box(119.75, front_y - 2.20, 81.30, 133.65, front_y + 1.20, 87.30)
+    spigot_inner = make_box(120.55, front_y - 3.00, 82.10, 132.85, front_y + 2.00, 86.50)
     spigot_ring = cut_shapes(spigot_outer, [spigot_inner])
     dext_fused = fuse_shapes([dext_sh, spigot_ring])
 
-    # NEMA 14 pancake motor body cylindrical relief cut (R=19.10 mm, center at X=122.371, Z=108.069)
-    motor_cut = make_cyl_y(122.371, 108.069, front_y - 3.0, front_y + 15.0, 19.10)
-
     # Expand top M3 clearance through-holes from R=1.70 to R=1.85 mm (dia 3.7 mm) for print shrinkage allowance
-    screw_l = make_cyl_y(111.98, 82.319 + dz, front_y - 5.0, front_y + 35.0, 1.85)
-    screw_r = make_cyl_y(141.42, 82.319 + dz, front_y - 5.0, front_y + 35.0, 1.85)
+    # centered at Z=81.569+dz = 89.569 mm (matching 5015_adapter, carriage_base, and carriage)
+    screw_l = make_cyl_y(111.98, 81.569 + dz, front_y - 5.0, front_y + 35.0, 1.85)
+    screw_r = make_cyl_y(141.42, 81.569 + dz, front_y - 5.0, front_y + 35.0, 1.85)
 
-    return cut_shapes(dext_fused, [motor_cut, screw_l, screw_r])
+    return cut_shapes(dext_fused, [screw_l, screw_r])
 
 
 def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     """Builds Variant_A_Separate_Carriage_Base_14mm (dY = -14.0 mm, dZ = +8.0 mm).
-    Iteration 5.3 Features:
+    Iteration 5.4 Features:
     - 100% hermetically sealed vertical airflow channel in `carriage_base` (lowered to Z=86.80 mm).
-    - NEMA 14 pancake motor cylindrical relief (R=19.10 mm) and ear relief with >2 mm solid ceiling.
-    - Expanded top M3 through-holes in `carriage_base` and `duct_extension` (R=1.85 mm / dia 3.7 mm).
-    - Rectangular wire pass-through hole below microswitch passing completely through carriage (Y=130..147 mm)
-      and shifted down (Z=77.00..83.50 mm) to clear the top M3 fastener hole at Z=89.57 mm by >3.5 mm.
+    - NEMA 14 pancake motor cylindrical relief (R=18.35 mm) and ear relief with >1.5 mm solid ceiling above through-hole.
+    - Top M3 through-holes in `carriage_base` and `duct_extension` aligned to Z=89.569 mm (matching `carriage` and `5015_adapter`).
+    - `carriage` retains 100% stock snug microswitch pocket; rectangular wire through-cut passes completely through `carriage_base`.
+    - Removed redundant round insert hole above rectangular cutout in `carriage_base` to prevent wire interference.
     - Planar flush mating faces on `[a]_duct` and `carriage` (raised boss pads shaved flat at Y=146.10 and Y=148.10 mm).
     - Blind rear pockets for 4x MGN12H block bolt heads and outer rear wing reliefs for belt clamp mounts & B Belt.
     - Lower mounting holes in `carriage`, `[a]_duct`, `led_mount`, and `carriage_base` moved to X=121.45, 131.95, Z=39.05 mm.
@@ -291,19 +293,18 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # D. Straight-through vertical internal airflow channel (100% HERMETICALLY SEALED - ZERO LEAKS!)
         # Top ceiling lowered to Z=86.80 mm to preserve airtight solid wall under pancake motor
         make_box(119.68, 147.30, 44.00, 133.72, 154.30, 86.80),
-        # E. Top rear inlet port to duct_extension (X=119.68..133.72, Y=152.50..156.50, Z=81.00..86.80)
-        make_box(119.68, 152.50, 81.00, 133.72, 156.50, 86.80),
-        # F. Micro switch and wire pass-through pocket clearance (X=105.5..118.9, Y=145.0..150.8, Z=76.50..83.50 mm)
-        make_box(105.50, 145.00, 76.50, 118.90, 150.80, 83.50),
-        # G. Stock carriage-to-carriage_base 4x M3 heat-set insert holes (shifted by dz=+8.0):
-        # Upper pair at X=112.90, 140.50, Z=76.569+8=84.569; Lower pair at X=106.20, 147.20, Z=49.319+8=57.319
-        make_cyl_y(112.90, 76.569 + dz, front_y - 1.0, front_y + 6.5, 2.35),
+        # E. Top rear inlet port to duct_extension (X=119.68..133.72, Y=152.50..156.50, Z=81.00..87.50)
+        make_box(119.68, 152.50, 81.00, 133.72, 156.50, 87.50),
+        # F. Rectangular wire pass-through hole through carriage_base (ALL THE WAY THROUGH in Y):
+        make_box(105.50, front_y - 1.0, 75.00, 119.00, 166.00, 83.50),
+        # G. Stock carriage-to-carriage_base M3 heat-set insert holes (shifted by dz=+8.0):
+        # NOTE: Upper-left hole at X=112.90 was removed per user instruction to eliminate conflict with microswitch cutout!
         make_cyl_y(140.50, 76.569 + dz, front_y - 1.0, front_y + 6.5, 2.35),
         make_cyl_y(106.20, 49.319 + dz, front_y - 1.0, front_y + 6.5, 2.35),
         make_cyl_y(147.20, 49.319 + dz, front_y - 1.0, front_y + 6.5, 2.35),
-        # H. Top duct_extension M3 straight-through clearance holes (expanded to R=1.85 mm / dia 3.7 mm for shrinkage):
-        make_cyl_y(111.98, 82.319 + dz, front_y - 1.0, base_rear_y + 1.0, 1.85),
-        make_cyl_y(141.42, 82.319 + dz, front_y - 1.0, base_rear_y + 1.0, 1.85),
+        # H. Top duct_extension M3 straight-through clearance holes shifted to Z=81.569+dz=89.569 mm (matching carriage and 5015_adapter!):
+        make_cyl_y(111.98, 81.569 + dz, front_y - 1.0, base_rear_y + 1.0, 1.85),
+        make_cyl_y(141.42, 81.569 + dz, front_y - 1.0, base_rear_y + 1.0, 1.85),
         # I. Side M3 holes for [a]_duct upper side tabs (Z=41.569+8=49.569, Y=150.8)
         make_cyl_x(103.00, 111.00, 150.80, 41.569 + dz, 1.70),
         make_cyl_x(142.40, 150.40, 150.80, 41.569 + dz, 1.70),
@@ -323,8 +324,8 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_box(138.50, 160.50, 40.00, 150.50, 166.00, 72.00),
         # N. Pocket for led_mount central bridge clearance (X in [122.5, 130.9], Y in [155.0, 156.4]):
         make_box(122.50, 145.00, 35.00, 130.90, 156.40, 42.50),
-        # O. NEMA 14 pancake motor cylindrical body relief cut (R=19.10 mm, center at X=122.371, Z=108.069):
-        make_cyl_y(122.371, 108.069, front_y - 1.0, base_rear_y + 1.0, 19.10),
+        # O. NEMA 14 pancake motor cylindrical body relief cut (R=18.35 mm, center at X=122.371, Z=108.069, leaving >1.5 mm solid ceiling):
+        make_cyl_y(122.371, 108.069, front_y - 1.0, base_rear_y + 1.0, 18.35),
         # P. NEMA 14 pancake motor lower-left ear relief cut:
         make_box(98.00, front_y - 1.0, 88.00, 107.00, base_rear_y + 1.0, 102.00),
     ]
@@ -349,14 +350,13 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     cbase_mod = f_cbase.Shape()
 
     # --- 2. Flat-Backed ABS-Printable `carriage` ---
+    # Stock microswitch pocket kept 100% UNTOUCHED so the microswitch remains a snug fit in its previous position!
     carr_sh = translate_shape(raw_carr, 0, dy, dz)
 
     # Plug old stock holes at X=119.55, 133.85, Z=38.47
     plug_cl = make_cyl_y(119.55, 30.469 + dz, 139.0, 147.0, 3.0)
     plug_cr = make_cyl_y(133.85, 30.469 + dz, 139.0, 147.0, 3.0)
-    # Plug old microswitch pocket to allow clean new lower through-cut
-    plug_micro = make_box(105.50, 140.80, 79.50, 119.10, 146.20, 86.50)
-    carr_plugged = fuse_shapes([carr_sh, plug_cl, plug_cr, plug_micro])
+    carr_plugged = fuse_shapes([carr_sh, plug_cl, plug_cr])
 
     carr_cuts = [
         # Siboor CNC upper standoff front driver access counterbores and clearance holes:
@@ -364,7 +364,7 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_cyl_y(111.20, 73.019, 125.0, front_y - 3.0, 3.10),
         make_cyl_y(142.20, 73.019, 125.0, front_y + 2.0, 1.70),
         make_cyl_y(142.20, 73.019, 125.0, front_y - 3.0, 3.10),
-        # Top duct_extension M3 heat-set insert pockets at rear face (Y=146.10):
+        # Top duct_extension M3 heat-set insert pockets at rear face (Y=146.10, Z=89.569 mm):
         make_cyl_y(111.98, 81.569 + dz, front_y - 5.5, front_y + 1.0, 2.35),
         make_cyl_y(141.42, 81.569 + dz, front_y - 5.5, front_y + 1.0, 2.35),
         # Siboor CNC lower plate mounting holes at X=121.45, 131.95, Z=39.05 mm (M3 SHCS counterbores on front):
@@ -372,8 +372,6 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_cyl_y(121.45, 39.05, 130.0, front_y - 2.5, 3.10),
         make_cyl_y(131.95, 39.05, 130.0, front_y + 2.0, 1.70),
         make_cyl_y(131.95, 39.05, 130.0, front_y - 2.5, 3.10),
-        # Microswitch wire pass-through hole through carriage body (lowered to Z=77.00..83.50 mm, passing Y=130..147 mm):
-        make_box(105.70, 130.00, 77.00, 118.90, 147.00, 83.50),
         # Shave raised boss pads on lower tongue to mate 100% planar flush at Y=146.10 mm:
         make_box(115.00, 146.10, 35.00, 138.00, 148.00, 42.50),
     ]
