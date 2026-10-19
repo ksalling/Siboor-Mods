@@ -231,7 +231,11 @@ def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -
     screw_l = make_cyl_y(111.98, 81.569 + dz, front_y - 5.0, front_y + 35.0, 1.85)
     screw_r = make_cyl_y(141.42, 81.569 + dz, front_y - 5.0, front_y + 35.0, 1.85)
 
-    return cut_shapes(dext_fused, [screw_l, screw_r])
+    # Relief notches on underside of fastener sleeves for Siboor CNC top ears (Zmax=86.57 mm, Y=162.90..169.50 mm)
+    notch_l = make_box(103.00, 162.00, 85.00, 116.00, 170.50, 86.90)
+    notch_r = make_box(137.00, 162.00, 85.00, 150.00, 170.50, 86.90)
+
+    return cut_shapes(dext_fused, [screw_l, screw_r, notch_l, notch_r])
 
 
 def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:

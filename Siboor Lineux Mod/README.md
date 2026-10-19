@@ -66,6 +66,11 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
     - This completely eliminates the previous notch and bite into the upper-left Siboor CNC standoff ($X=111.20, Z=73.02\text{ mm}$, $R=2.95\text{ mm}$), restoring a 100% complete, unclipped cylindrical boss with **$>3.78\text{ mm}$ of solid ABS ceiling** above the M3 through-hole and **$>2.53\text{ mm}$ of solid ABS clearance** above the CNC standoff face.
     - Provides a clean, generous $11.0\text{ mm} \times 6.0\text{ mm}$ wiring channel centered directly behind the microswitch terminals ($X=107.3, 112.3, 117.3\text{ mm}$) while increasing wall thickness to the vertical air duct to $1.68\text{ mm}$.
 
+13. **`duct_extension` Standoff Relief Notches for Siboor CNC Top Ears (Iteration 5.6):**
+    - **Ear Relief Notches:** Added localized relief notches ($X \in [103.0, 116.0]$ and $[137.0, 150.0]$, $Y \in [162.0, 170.5]$, $Z \le 86.90\text{ mm}$) to the underside of `duct_extension.step`.
+    - Completely eliminates interference with the top rounded ears of `siboorCNC` ($Z_{\text{max}} = 86.57\text{ mm}$, previously intersecting by $0.50\text{ mm}$ following the Iteration 5.4 hole alignment shift) with **$0.000\text{ mm}^3$ collision volume**.
+    - Preserves $>0.82\text{ mm}$ of solid ABS wall thickness under the top M3 clearance holes ($Z = 89.57\text{ mm}$) and maintains $>4.5\text{ mm}$ solid wall to the internal airflow channel, keeping airflow 100% hermetically sealed.
+
 ---
 
 ## Fastener Bill of Materials (BOM) & Joint Mapping
