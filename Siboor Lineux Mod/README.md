@@ -61,6 +61,11 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
       - Shifted `duct_extension` by $(dy, dz - 0.75\text{ mm})$ to eliminate its stock $+0.75\text{ mm}$ offset, bringing its sleeve holes to **$Z = 89.57\text{ mm}$** and its outer cylindrical mold line ($R = 3.50\text{ mm}$, $Z_{\text{top}} = 93.07\text{ mm}$) flush with `5015_adapter` at $Y = 183.86\text{ mm}$.
       - Replaced the previous large radial cut with exact tangential body clearance ($R = 18.35\text{ mm}$ on `carriage_base` and stock $R = 18.65\text{ mm}$ curve on `duct_extension`). This eliminates the open trough, preserving a solid, continuous $>1.5\text{ mm}$ cylindrical ceiling above the screw passage with **$0.000\text{ mm}^3$ motor collision**.
 
+12. **CNC Standoff Fastener Hole Restoration & Wire Passthrough Optimization (Iteration 5.5):**
+    - **Standoff & Fastener Hole Boss Restoration:** In `carriage_base.step`, the rectangular wire passthrough cutout was raised to **$Z_{\text{bottom}} = 78.50\text{ mm}$** and narrowed to **$X \in [107.00, 118.00\text{ mm}]$** ($Z \in [78.50, 84.50\text{ mm}]$).
+    - This completely eliminates the previous notch and bite into the upper-left Siboor CNC standoff ($X=111.20, Z=73.02\text{ mm}$, $R=2.95\text{ mm}$), restoring a 100% complete, unclipped cylindrical boss with **$>3.78\text{ mm}$ of solid ABS ceiling** above the M3 through-hole and **$>2.53\text{ mm}$ of solid ABS clearance** above the CNC standoff face.
+    - Provides a clean, generous $11.0\text{ mm} \times 6.0\text{ mm}$ wiring channel centered directly behind the microswitch terminals ($X=107.3, 112.3, 117.3\text{ mm}$) while increasing wall thickness to the vertical air duct to $1.68\text{ mm}$.
+
 ---
 
 ## Fastener Bill of Materials (BOM) & Joint Mapping

@@ -295,8 +295,8 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_box(119.68, 147.30, 44.00, 133.72, 154.30, 86.80),
         # E. Top rear inlet port to duct_extension (X=119.68..133.72, Y=152.50..156.50, Z=81.00..87.50)
         make_box(119.68, 152.50, 81.00, 133.72, 156.50, 87.50),
-        # F. Rectangular wire pass-through hole through carriage_base (ALL THE WAY THROUGH in Y):
-        make_box(105.50, front_y - 1.0, 75.00, 119.00, 166.00, 83.50),
+        # F. Sized rectangular wiring passthrough through carriage_base (clears upper CNC standoff at Z=73.02 with >3.7 mm margin):
+        make_box(107.00, front_y - 1.0, 78.50, 118.00, 166.00, 84.50),
         # G. Stock carriage-to-carriage_base M3 heat-set insert holes (shifted by dz=+8.0):
         # NOTE: Upper-left hole at X=112.90 was removed per user instruction to eliminate conflict with microswitch cutout!
         make_cyl_y(140.50, 76.569 + dz, front_y - 1.0, front_y + 6.5, 2.35),
