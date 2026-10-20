@@ -1,4 +1,4 @@
-# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5: ***UNTESTED Production Release)
+# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.7: Print & Build Ready)
 
 This repository contains the parametric CAD modifications (`STEP` and `STL`) to mount the **Lineux Hotswap Toolchanger Carriage** (`LineuxCarriage.step` & `LineuxTool.step`) directly onto the stock **Siboor Voron Trident CNC Carriage** (`siboorCNC.step` on an `MGN12H` linear rail block), replacing the stock Lineux `carriage_base` part.
 
@@ -71,6 +71,13 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
     - Completely eliminates interference with the top rounded ears of `siboorCNC` ($Z_{\text{max}} = 86.57\text{ mm}$, previously intersecting by $0.50\text{ mm}$ following the Iteration 5.4 hole alignment shift) with **$0.000\text{ mm}^3$ collision volume**.
     - Preserves $>0.82\text{ mm}$ of solid ABS wall thickness under the top M3 clearance holes ($Z = 89.57\text{ mm}$) and maintains $>4.5\text{ mm}$ solid wall to the internal airflow channel, keeping airflow 100% hermetically sealed.
 
+
+14. **Removal of Raised Boss Pads on `[a]_duct` & Loosened Mating Tolerances (Iteration 5.7):**
+    - **Raised Boss Pad Elimination on `[a]_duct`:** In `[a]_duct.step`, the plugs used to seal the old stock mounting holes were constrained strictly within $Y \in [146.10, 148.10\text{ mm}]$ (tab thickness $2.00\text{ mm}$) and radius $R = 1.75\text{ mm}$. This completely eliminates the cylindrical boss pads that previously protruded forward ($1.1\text{ mm}$) and rearward ($0.9\text{ mm}$) around the fastener holes, restoring 100% flat, planar front ($Y = 146.10\text{ mm}$) and rear ($Y = 148.10\text{ mm}$) faces on the mounting tab.
+    - **Slip-Fit Spigot Perimeter Clearance:** Resized `carriage_base`'s downward male spigot from $X \in [119.75, 133.65\text{ mm}]$ and $Y \in [147.35, 154.25\text{ mm}]$ to $X \in [120.05, 133.35\text{ mm}]$ and $Y \in [147.65, 153.95\text{ mm}]$. This expands clearance to `[a]_duct`'s female throat ($X \in [119.68, 133.72\text{ mm}]$, $Y \in [147.30, 154.30\text{ mm}]$) from tight $\sim 0.05\text{ mm}$ to a smooth $0.35\text{ mm} \dots 0.37\text{ mm}$ slip fit all around.
+    - **Arch & Tab Relief Widening:** Widened `carriage_base`'s bottom arch Cut B to $X \in [105.90, 147.50\text{ mm}]$ (+0.40 mm clearance per side over `[a]_duct`'s $Z = 52.82\text{ mm}$ flat top) and tab relief Cut C to $X \in [115.00, 138.50\text{ mm}]$, $Z \in [34.50, 42.50\text{ mm}]$ ($Y$ to $148.30\text{ mm}$), providing $>0.50\text{ mm}$ clearance around the tab.
+    - **Carriage Lower Tongue Side Relief:** Relieved the side faces of `carriage`'s lower tongue ($X \in [114.50, 115.80\text{ mm}]$ and $[137.70, 139.00\text{ mm}]$), narrowing the tongue to $21.90\text{ mm}$ to slide easily into `[a]_duct`'s $22.43\text{ mm}$ pocket with $+0.26\text{ mm}$ clearance on each side.
+    - **Shrinkage-Compensated M3 Fastener Holes:** Expanded the lower M3 clearance holes across `[a]_duct`, `carriage`, and `carriage_base` to $R = 1.85\text{ mm}$ ($\varnothing 3.7\text{ mm}$), allowing M3 hardware to glide freely even with ABS print contraction.
 ---
 
 ## Fastener Bill of Materials (BOM) & Joint Mapping

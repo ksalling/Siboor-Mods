@@ -290,10 +290,10 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # A. Relief at Y=155.00..156.00 for siboorCNC's upper forward standoffs (X=104.2..115.2 and 138.2..150.4, Z=69.5..76.2)
         make_box(103.00, 155.00, 69.50, 115.20, 156.00, 76.20),
         make_box(138.20, 155.00, 69.50, 150.40, 156.00, 76.20),
-        # B. Full bottom arch cutout so [a]_duct's flat Z=52.82 top face seats flush (widened to X=106.30..147.10, Y to 156.00)
-        make_box(106.30, front_y - 0.5, 35.00, 147.10, 156.00, aduct_top_z),
-        # C. Relief for aduct lower mounting tab at Z=36..42 mm
-        make_box(118.00, front_y - 0.5, 36.00, 135.00, 148.10, 42.10),
+        # B. Loosened bottom arch cutout: widened to X=105.90..147.50 (+0.4 mm clearance on left/right sides)
+        make_box(105.90, front_y - 0.5, 35.00, 147.50, 156.00, aduct_top_z),
+        # C. Loosened relief for aduct lower mounting tab (X=115.00..138.50, Z=34.50..42.50, Y to 148.30):
+        make_box(115.00, front_y - 0.5, 34.50, 138.50, 148.30, 42.50),
         # D. Straight-through vertical internal airflow channel (100% HERMETICALLY SEALED - ZERO LEAKS!)
         # Top ceiling lowered to Z=86.80 mm to preserve airtight solid wall under pancake motor
         make_box(119.68, 147.30, 44.00, 133.72, 154.30, 86.80),
@@ -315,9 +315,9 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # J. Siboor CNC Upper Forward Standoff M3 clearance holes (X=111.20, 142.20, Z=73.019)
         make_cyl_y(111.20, 73.019, front_y - 1.0, 156.00, 1.70),
         make_cyl_y(142.20, 73.019, front_y - 1.0, 156.00, 1.70),
-        # K. Siboor CNC Lower Plate M3 clearance holes (X=121.45, 131.95, Z=39.05 mm) through to Y=165.10 mm:
-        make_cyl_y(121.45, 39.05, 154.50, 166.00, 1.70),
-        make_cyl_y(131.95, 39.05, 154.50, 166.00, 1.70),
+        # K. Siboor CNC Lower Plate M3 clearance holes (X=121.45, 131.95, Z=39.05 mm, expanded to R=1.85 mm for print shrinkage):
+        make_cyl_y(121.45, 39.05, 154.50, 166.00, 1.85),
+        make_cyl_y(131.95, 39.05, 154.50, 166.00, 1.85),
         # L. MGN12H block bolt head rear pockets at (116.70, 68.32), (136.70, 68.32), (116.70, 48.32), (136.70, 48.32):
         make_cyl_y(116.70, 68.319, 162.00, 166.00, 3.80),
         make_cyl_y(136.70, 68.319, 162.00, 166.00, 3.80),
@@ -341,11 +341,11 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     spig_step_a = cut_shapes(
         spig_outer_a,
         [
-            make_box(118.00, 146.00, aduct_top_z - 2.50, 119.75, 155.50, aduct_top_z),
-            make_box(133.65, 146.00, aduct_top_z - 2.50, 135.50, 155.50, aduct_top_z),
-            make_box(119.75, 146.00, aduct_top_z - 2.50, 133.65, 147.35, aduct_top_z),
-            make_box(119.75, 154.25, aduct_top_z - 2.50, 133.65, 155.50, aduct_top_z),
-            make_box(120.55, 148.15, aduct_top_z - 3.00, 132.85, 153.45, aduct_top_z + 2.50),
+            make_box(118.00, 146.00, aduct_top_z - 2.50, 120.05, 155.50, aduct_top_z), # left relief (0.37 mm clearance)
+            make_box(133.35, 146.00, aduct_top_z - 2.50, 135.50, 155.50, aduct_top_z), # right relief (0.37 mm clearance)
+            make_box(119.75, 146.00, aduct_top_z - 2.50, 133.65, 147.65, aduct_top_z), # front relief (0.35 mm clearance)
+            make_box(119.75, 153.95, aduct_top_z - 2.50, 133.65, 155.50, aduct_top_z), # rear relief (0.35 mm clearance)
+            make_box(121.25, 148.85, aduct_top_z - 3.00, 132.15, 152.75, aduct_top_z + 2.50),
         ],
     )
     f_cbase = BRepAlgoAPI_Fuse(cbase_body, spig_step_a)
@@ -371,13 +371,16 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # Top duct_extension M3 heat-set insert pockets at rear face (Y=146.10, Z=89.569 mm):
         make_cyl_y(111.98, 81.569 + dz, front_y - 5.5, front_y + 1.0, 2.35),
         make_cyl_y(141.42, 81.569 + dz, front_y - 5.5, front_y + 1.0, 2.35),
-        # Siboor CNC lower plate mounting holes at X=121.45, 131.95, Z=39.05 mm (M3 SHCS counterbores on front):
-        make_cyl_y(121.45, 39.05, 130.0, front_y + 2.0, 1.70),
+        # Siboor CNC lower plate mounting holes at X=121.45, 131.95, Z=39.05 mm (M3 SHCS counterbores, R=1.85 mm through-hole):
+        make_cyl_y(121.45, 39.05, 130.0, front_y + 2.0, 1.85),
         make_cyl_y(121.45, 39.05, 130.0, front_y - 2.5, 3.10),
-        make_cyl_y(131.95, 39.05, 130.0, front_y + 2.0, 1.70),
+        make_cyl_y(131.95, 39.05, 130.0, front_y + 2.0, 1.85),
         make_cyl_y(131.95, 39.05, 130.0, front_y - 2.5, 3.10),
         # Shave raised boss pads on lower tongue to mate 100% planar flush at Y=146.10 mm:
-        make_box(115.00, 146.10, 35.00, 138.00, 148.00, 42.50),
+        make_box(114.00, 146.10, 34.00, 139.00, 148.00, 43.00),
+        # Loosen tongue sides: 0.35 mm clearance on each side inside [a]_duct pocket:
+        make_box(114.50, 141.00, 34.50, 115.80, 146.20, 43.00),
+        make_box(137.70, 141.00, 34.50, 139.00, 146.20, 43.00),
     ]
     carr_mod = cut_shapes(carr_plugged, carr_cuts)
 
@@ -385,22 +388,17 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     # Top face stays 100% flat at Z = 52.82 mm for upside-down support-free ABS printing!
     aduct_sh = translate_shape(raw_aduct, 0, dy, dz)
 
-    # Plug old stock holes in mounting tab at X=119.55, 133.85, Z=38.47
-    plug_al = make_cyl_y(119.55, 30.469 + dz, 145.0, 149.0, 2.2)
-    plug_ar = make_cyl_y(133.85, 30.469 + dz, 145.0, 149.0, 2.2)
+    # Plug old stock holes strictly within mounting tab Y=[146.10, 148.10] (eliminates raised bosses!):
+    plug_al = make_cyl_y(119.55, 30.469 + dz, 146.10, 148.10, 1.75)
+    plug_ar = make_cyl_y(133.85, 30.469 + dz, 146.10, 148.10, 1.75)
     aduct_plugged = fuse_shapes([aduct_sh, plug_al, plug_ar])
 
-    # Lower mounting holes in tab at X=121.45, 131.95, Z=39.05 mm:
+    # Lower mounting holes in tab at X=121.45, 131.95, Z=39.05 mm (expanded to R=1.85 mm / dia 3.7 mm for print shrinkage):
     # ZERO holes/cuts on cooling arms! Airflow channels are 100% continuous, hollow, and unpierced.
-    cut_al = make_cyl_y(121.45, 39.05, 145.0, 149.0, 1.70)
-    cut_ar = make_cyl_y(131.95, 39.05, 145.0, 149.0, 1.70)
+    cut_al = make_cyl_y(121.45, 39.05, 145.0, 149.0, 1.85)
+    cut_ar = make_cyl_y(131.95, 39.05, 145.0, 149.0, 1.85)
 
-    # Shave raised circular boss pads on mounting tab:
-    # Front pads cut (Y < 146.10 mm) and Rear pads cut (Y > 148.10 mm) for 100% planar flush mating:
-    cut_front_pads = make_box(115.00, 144.00, 35.00, 138.00, 146.10, 42.50)
-    cut_rear_pads = make_box(115.00, 148.10, 35.00, 138.00, 150.00, 42.50)
-
-    aduct_mod = cut_shapes(aduct_plugged, [cut_al, cut_ar, cut_front_pads, cut_rear_pads])
+    aduct_mod = cut_shapes(aduct_plugged, [cut_al, cut_ar])
 
     # --- 4. Shifted `duct_extension` (stock length, matching stock 37.76 mm standoffs) ---
     dext_mod = build_shifted_duct_extension(raw_dext, dy, dz)
