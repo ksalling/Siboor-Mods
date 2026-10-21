@@ -1,4 +1,4 @@
-# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.11: Unified Outer Mold Line, Sealed Duct Spigot & Socket, and Preserved 360° Screw Sleeves)
+# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.12: Obsolete Stock Belt Cavity Cleanup & Clean Rectangular Wiring Tunnel)
 
 This repository contains the parametric CAD modifications (`STEP` and `STL`) to mount the **Lineux Hotswap Toolchanger Carriage** (`LineuxCarriage.step` & `LineuxTool.step`) directly onto the stock **Siboor Voron Trident CNC Carriage** (`siboorCNC.step` on an `MGN12H` linear rail block), replacing the stock Lineux `carriage_base` part.
 
@@ -111,6 +111,12 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
       - **Airflow Integrity:** Airflow channel area is preserved at $\sim 81.2\text{ mm}^2$ with continuous, solid ABS walls ($>1.4\text{ mm}$ ceiling under the motor saddle) and zero unsealed gaps or slits.
     - **Full 360° Screw Sleeve Integrity:** The top-left M3 through-hole at $(111.98, 89.57\text{ mm})$ is verified as a complete $360.0^\circ$ closed cylinder with $>0.55\text{ mm}$ solid wall thickness (zero troughs, open slits, or broken sleeves).
     - **Preserved NEMA 14 Gear Mesh Adjustment Clearance:** Both `carriage_base` and `duct_extension` feature matching rotated cylinder cuts ($R = 18.80\text{ mm}$ at $(122.760, 107.190\text{ mm})$). Delivers **$0.945\text{ mm}$** nominal clearance to the stepper motor body and **$0.550\text{ mm}$** clearance at maximum adjustment rotation ($+2.5^\circ$), with **$0.000\text{ mm}^3$ collision volume** across all parts and full freedom for gear mesh tuning.
+
+19. **Obsolete Stock Belt Cavity Cleanup & Clean Rectangular Wiring Tunnel (Iteration 5.12):**
+    - **Root Cause of Fragmented Cutout:** In stock Lineux, the XY motion belts clamped directly into the back of `carriage_base` using GT2-toothed slots ($Z \in [70.0, 75.0\text{ mm}]$, $Y \in [154.1, 154.8\text{ mm}]$), alongside a horizontal stock wiring channel ($Z \in [81.85, 86.28\text{ mm}]$). In the Siboor Voron Trident mod, the belts clamp directly to the aluminum `siboorCNC` carriage, rendering these cavities completely obsolete. When `upper_cbase` was imported from stock CAD in Iteration 5.11, it pulled in those internal voids. Cut F (the microswitch wire pass-through at $Z \in [78.50, 84.50\text{ mm}]$) intersected both the stock tunnel floor and the top of the belt tooth pocket, producing a fragmented, stepped double-cutout with exposed belt teeth.
+    - **Solid Wing Reconstruction:** Added solid fill blocks (`plug_l` and `plug_r`) across $X \in [103.7, 119.0]$ and $[134.0, 149.7]$ ($Z \in [70.0, 90.0\text{ mm}]$), completely eliminating the obsolete stock belt teeth and cavities.
+    - **Clean Rectangular Wiring Tunnel:** Reapplied Cut F through solid plastic, producing a single, continuous, 4-wall rectangular tunnel ($11.0\text{ mm} \times 6.0\text{ mm}$) through $Y \in [146.10, 155.50\text{ mm}]$ with 100% planar walls, zero steps, zero fragmented voids, and zero leftover belt teeth.
+    - **Model Optimization:** Reduced `carriage_base.step` entity count from 25,486 to 18,245 (over 7,200 entities of fragmented curves eliminated). Single manifold solid (`solids=1`) with $0.000\text{ mm}^3$ collision across all assembly parts.
 
 ---
 

@@ -367,6 +367,11 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     box_upper = make_box(103.00, front_y, 70.00, 150.00, base_rear_y + 0.10, 95.00)
     upper_cbase = BRepAlgoAPI_Common(cbase_sh, box_upper).Shape()
 
+    # Plugs to eliminate obsolete stock Lineux belt clamp cavities and stock wire tunnel
+    # so that the wings are 100% solid ABS and Cut F is a single clean rectangular pass-through:
+    plug_l = make_box(103.70, front_y, 70.00, 119.00, base_rear_y, 90.00)
+    plug_r = make_box(134.00, front_y, 70.00, 149.70, base_rear_y, 90.00)
+
     lower_core = make_box(103.70, front_y, leg_bot_z, 149.70, base_rear_y, 70.00)
 
     # Rear columns and backing web mating to siboorCNC (Y=165.10 mm):
@@ -381,7 +386,7 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     low_boss_r = make_box(128.50, 155.50, 35.50, 135.40, 165.10, 42.60)
 
     cbase_solid = fuse_shapes([
-        upper_cbase, lower_core,
+        upper_cbase, plug_l, plug_r, lower_core,
         col_l, col_r, low_rib_l, low_rib_r,
         rear_web_low, low_boss_l, low_boss_r,
     ])
