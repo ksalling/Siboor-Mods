@@ -228,19 +228,29 @@ def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -
     spigot_ring = cut_shapes(spigot_outer, [spigot_inner])
     dext_fused = fuse_shapes([dext_sh, spigot_ring])
 
-    # Expand top M3 clearance through-holes from R=1.70 to R=1.85 mm (dia 3.7 mm) for print shrinkage allowance
+    # Standard M3 clearance through-holes (R=1.70 mm, dia 3.40 mm) for smooth print fit
     # centered at Z=81.569+dz = 89.569 mm (matching 5015_adapter, carriage_base, and carriage)
-    screw_l = make_cyl_y(111.98, 81.569 + dz, front_y - 5.0, front_y + 35.0, 1.85)
-    screw_r = make_cyl_y(141.42, 81.569 + dz, front_y - 5.0, front_y + 35.0, 1.85)
+    r_hole = 1.70
+    r_sleeve = 2.50
+    screw_l = make_cyl_y(111.98, 81.569 + dz, front_y - 5.0, front_y + 35.0, r_hole)
+    screw_r = make_cyl_y(141.42, 81.569 + dz, front_y - 5.0, front_y + 35.0, r_hole)
 
     # Relief notches on underside of fastener sleeves for Siboor CNC top ears (Zmax=86.57 mm, Y=162.90..169.50 mm)
     notch_l = make_box(103.00, 162.00, 85.00, 116.00, 170.50, 86.90)
     notch_r = make_box(137.00, 162.00, 85.00, 150.00, 170.50, 86.90)
 
     # Rotated NEMA 14 pancake motor body relief cut for backlash adjustment rotation (R=18.80 mm at rotated center (122.76, 107.19))
-    cut_dext_rot = make_cyl_y(122.760, 107.190, front_y - 3.0, front_y + 15.0, 18.80)
+    # Bounded to X >= 114.40 mm across the central cradle, protecting a solid 0.80 mm sleeve wall around (111.98, 89.569) for X < 114.40 mm:
+    cut_dext_raw = make_cyl_y(122.760, 107.190, front_y - 3.0, front_y + 15.0, 18.80)
+    box_dext_cradle = make_box(114.40, front_y - 4.0, 70.0, 150.0, front_y + 16.0, 130.0)
+    cut_dext_cradle = BRepAlgoAPI_Common(cut_dext_raw, box_dext_cradle).Shape()
 
-    return cut_shapes(dext_fused, [screw_l, screw_r, notch_l, notch_r, cut_dext_rot])
+    box_dext_left = make_box(95.0, front_y - 4.0, 70.0, 114.40, front_y + 16.0, 130.0)
+    cut_dext_left_raw = BRepAlgoAPI_Common(cut_dext_raw, box_dext_left).Shape()
+    protect_dext_sleeve = make_cyl_y(111.98, 81.569 + dz, front_y - 5.0, front_y + 20.0, r_sleeve)
+    cut_dext_left = cut_shapes(cut_dext_left_raw, [protect_dext_sleeve])
+
+    return cut_shapes(dext_fused, [screw_l, screw_r, notch_l, notch_r, cut_dext_cradle, cut_dext_left])
 
 
 def build_modified_latch(raw_latch: TopoDS_Shape, dy: float, dz: float, r_hole: float = 1.65) -> TopoDS_Shape:
@@ -391,8 +401,17 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         rear_web_low, low_boss_l, low_boss_r,
     ])
 
+    r_hole = 1.70
+    r_sleeve = 2.50
     r_cut = 18.80
-    cut_rot = make_cyl_y(122.760, 107.190, front_y - 1.0, base_rear_y + 1.0, r_cut)
+    cut_raw = make_cyl_y(122.760, 107.190, front_y - 1.0, base_rear_y + 1.0, r_cut)
+    box_cradle = make_box(114.40, front_y - 2.0, 70.0, 150.0, base_rear_y + 2.0, 130.0)
+    cut_cbase_cradle = BRepAlgoAPI_Common(cut_raw, box_cradle).Shape()
+
+    box_left = make_box(95.0, front_y - 2.0, 70.0, 114.40, base_rear_y + 2.0, 130.0)
+    cut_left_raw = BRepAlgoAPI_Common(cut_raw, box_left).Shape()
+    protect_sleeve = make_cyl_y(111.98, 81.569 + dz, front_y - 2.0, base_rear_y + 2.0, r_sleeve)
+    cut_cbase_left = cut_shapes(cut_left_raw, [protect_sleeve])
 
     cbase_cuts = [
         # A. Relief at Y=155.00..156.00 for siboorCNC's upper forward standoffs (X=104.2..115.2 and 138.2..150.4, Z=69.5..76.2)
@@ -415,8 +434,8 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_cyl_y(106.20, 49.319 + dz, front_y - 1.0, front_y + 6.5, 2.35),
         make_cyl_y(147.20, 49.319 + dz, front_y - 1.0, front_y + 6.5, 2.35),
         # H. Top duct_extension M3 straight-through clearance holes shifted to Z=81.569+dz=89.569 mm (matching carriage and 5015_adapter!):
-        make_cyl_y(111.98, 81.569 + dz, front_y - 1.0, base_rear_y + 1.0, 1.85),
-        make_cyl_y(141.42, 81.569 + dz, front_y - 1.0, base_rear_y + 1.0, 1.85),
+        make_cyl_y(111.98, 81.569 + dz, front_y - 1.0, base_rear_y + 1.0, r_hole),
+        make_cyl_y(141.42, 81.569 + dz, front_y - 1.0, base_rear_y + 1.0, r_hole),
         # I. Side M3 holes for [a]_duct upper side tabs (Z=41.569+8=49.569, Y=150.8)
         make_cyl_x(103.00, 111.00, 150.80, 41.569 + dz, 1.70),
         make_cyl_x(142.40, 150.40, 150.80, 41.569 + dz, 1.70),
@@ -436,8 +455,9 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_box(138.50, 160.50, 40.00, 150.50, 166.00, 72.00),
         # N. Pocket for led_mount central bridge clearance (X in [122.5, 130.9], Y in [155.0, 156.4]):
         make_box(122.50, 145.00, 35.00, 130.90, 156.40, 42.50),
-        # O. NEMA 14 pancake motor rotated cut for gear-mesh adjustment clearance:
-        cut_rot,
+        # O. NEMA 14 pancake motor cuts for gear-mesh adjustment clearance:
+        cut_cbase_cradle,
+        cut_cbase_left,
         # P. NEMA 14 pancake motor lower-left ear relief cut (expanded for rotation clearance):
         make_box(98.00, front_y - 1.0, 88.00, 108.50, base_rear_y + 1.0, 103.00),
     ]

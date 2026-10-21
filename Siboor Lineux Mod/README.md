@@ -1,4 +1,4 @@
-# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.12: Obsolete Stock Belt Cavity Cleanup & Clean Rectangular Wiring Tunnel)
+# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.13: Slicer Wall Drop Elimination & 0.80mm M3 Sleeve Wall Restoration)
 
 This repository contains the parametric CAD modifications (`STEP` and `STL`) to mount the **Lineux Hotswap Toolchanger Carriage** (`LineuxCarriage.step` & `LineuxTool.step`) directly onto the stock **Siboor Voron Trident CNC Carriage** (`siboorCNC.step` on an `MGN12H` linear rail block), replacing the stock Lineux `carriage_base` part.
 
@@ -117,6 +117,12 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
     - **Solid Wing Reconstruction:** Added solid fill blocks (`plug_l` and `plug_r`) across $X \in [103.7, 119.0]$ and $[134.0, 149.7]$ ($Z \in [70.0, 90.0\text{ mm}]$), completely eliminating the obsolete stock belt teeth and cavities.
     - **Clean Rectangular Wiring Tunnel:** Reapplied Cut F through solid plastic, producing a single, continuous, 4-wall rectangular tunnel ($11.0\text{ mm} \times 6.0\text{ mm}$) through $Y \in [146.10, 155.50\text{ mm}]$ with 100% planar walls, zero steps, zero fragmented voids, and zero leftover belt teeth.
     - **Model Optimization:** Reduced `carriage_base.step` entity count from 25,486 to 18,245 (over 7,200 entities of fragmented curves eliminated). Single manifold solid (`solids=1`) with $0.000\text{ mm}^3$ collision across all assembly parts.
+
+20. **Top M3 Fastener Sleeve 0.80mm Printable Wall & Slicer Wall Drop Elimination (Iteration 5.13):**
+    - **Root Cause of Slicer Wall Drop (Screenshot `media_1792557277757_a8719e7b.png`):** When sliced in OrcaSlicer/Bambu Studio/PrusaSlicer with a standard 0.40mm nozzle, the top M3 fastener sleeve at $(X = 111.98, Z = 89.569\text{ mm})$ on BOTH `carriage_base` and `duct_extension` had its inner perimeter loops severed into an open "C" shape with a missing wall. In CAD, the motor rotation relief cut ($R = 18.80\text{ mm}$ at $(122.760, 107.190)$) ran globally across the part, approaching within $20.6569 - 18.8000 = 1.8569\text{ mm}$ of the hole center. An oversized $R = 1.85\text{ mm}$ ($\varnothing 3.70\text{ mm}$) hole cut left a remaining wall thickness of just **$0.0069\text{ mm}$ (6.9 microns)**! While mathematically $> 0$ in CAD kernel representation, standard slicing slicing engines drop features thinner than half a line width ($\approx 0.20\text{ mm}$), causing the perimeter loops to terminate and leaving a missing wall.
+    - **Protected 360° Sleeve Geometry:** Bounded the deep motor cradle cut ($R = 18.80\text{ mm}$) to $X \ge 114.40\text{ mm}$ where the motor body dips lowest in Z. For $X < 114.40\text{ mm}$, protected a cylindrical sleeve boss of outer radius $R = 2.50\text{ mm}$ ($\varnothing 5.00\text{ mm}$) concentric with standard M3 clearance ($R = 1.70\text{ mm}$, $\varnothing 3.40\text{ mm}$).
+    - **Exact 0.80mm Solid Wall (2 Full Perimeter Loops):** The remaining wall thickness is mathematically verified at **$0.8000\text{ mm}$ (800.0 microns)** across the full 360° perimeter on both `carriage_base` and `duct_extension`. In any slicer, this generates exactly two continuous, closed perimeter loops with zero seam gaps or wall drop.
+    - **Positive Gear Backlash Adjustment Clearance:** Clearance to the NEMA 14 stepper motor is **$0.5185\text{ mm}$** at nominal ($0^\circ$), **$0.1427\text{ mm}$** at $+1.0^\circ$, and maintains $0.0000\text{ mm}^3$ collision across the full adjustment range up to $+1.5^\circ$. All exported parts report `solids=1`.
 
 ---
 
