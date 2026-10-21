@@ -1,4 +1,4 @@
-# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.9: Print & Build Ready with Dual 5015 Standoff Heat-Set Insert Options)
+# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.10: NEMA 14 Gear Mesh Adjustment Clearance & Dual 5015 Standoff Options)
 
 This repository contains the parametric CAD modifications (`STEP` and `STL`) to mount the **Lineux Hotswap Toolchanger Carriage** (`LineuxCarriage.step` & `LineuxTool.step`) directly onto the stock **Siboor Voron Trident CNC Carriage** (`siboorCNC.step` on an `MGN12H` linear rail block), replacing the stock Lineux `carriage_base` part.
 
@@ -93,6 +93,17 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
       2. **`5015_standoff_x2_OD4_insert` (OD 4.0mm Inserts, 5.0mm depth):** Reconstructed with an insert pocket bore of **$\varnothing 3.60\text{ mm}$ ($R = 1.80\text{ mm}$)**, depth **$5.80\text{ mm}$** (to allow the 5mm deep insert to sit sub-flush with a plastic reservoir), $\varnothing 3.40\text{ mm}$ ($R = 1.70\text{ mm}$) M3 clearance bore to depth $3.0\text{ mm}$, and a $0.40\text{ mm} \times 45^\circ$ conical lead-in chamfer ($\varnothing 4.40\text{ mm}$ at mouth). Provides $0.40\text{ mm}$ diametral interference for 4mm OD inserts.
     - **Preserved Geometry:** Both versions maintain the exact stock $37.76\text{ mm}$ length along $Y$, preserving the required $18\text{ mm}$ clearance gap behind the NEMA 14 stepper motor.
 
+
+17. **NEMA 14 Pancake Motor Gear Mesh Adjustment Clearance (Iteration 5.10):**
+    - **Root Cause:** In stock Lineux, the motor mounting holes on `carriage` include a pivot at $(102.48, 90.79)$ ($98.79\text{ mm}$ shifted) and an arc adjustment slot at $(142.71, 108.29) \to (141.91, 110.02)$ spanning $2.49^\circ \approx 2.5^\circ$ to adjust extruder gear backlash / mesh. In the previous CAD model, `carriage_base` had a nominal clearance of only $0.10\text{ mm}$ to the motor. When rotating the motor along the slot in the gear-loosening direction (clockwise / $dX > 0, dZ < 0$), `carriage_base` caused an immediate collision at only $+0.5^\circ$ of rotation ($dZ = -0.17\text{ mm}$), locking the motor in its tightest meshing position and binding extruder gears. Additionally, at rotations $> +1.0^\circ$, `duct_extension` also contacted the rear of the motor body.
+    - **Dual-Cut Clearance Solution on `carriage_base`:**
+      1. **Nominal Clearance Expansion ($+2.45\text{ mm}$):** Added deep cylindrical cut `cut_O1` ($R = 20.25\text{ mm}$) at nominal motor center $(122.371, 108.069\text{ mm})$ and rotated cut `cut_O2` ($R = 19.85\text{ mm}$) at rotated center $(122.760, 107.190\text{ mm}$), bounded to $X \ge 114.30\text{ mm}$.
+      2. **Full $360^\circ$ Screw Boss Enclosure:** Distance from the motor to the top M3 through-hole at $(111.98, 89.57\text{ mm})$ is $19.63\text{ mm}$. To prevent hole clipping, bounded deep cuts to $X \ge 114.30\text{ mm}$ and added a cylindrical boss ($R = 2.40\text{ mm}$) and safe cut ($R = 19.45\text{ mm}$), preserving 100% full $360^\circ$ closed cylinder enclosure and $>0.55\text{ mm}$ solid wall around the M3 screw.
+      3. **Airflow Duct Integrity:** Lowered `carriage_base`'s internal vertical channel ceiling to $Z = 85.20\text{ mm}$ and calibrated the inlet port to $Z \in [79.50, 85.80\text{ mm}]$, preserving a robust $>2.14\text{ mm}$ solid, airtight ABS ceiling under the motor cut floor ($Z = 87.34\text{ mm}$) and $>67\text{ mm}^2$ flow area.
+      4. **Full Rotation Clearance:** Nominal clearance is **$1.20\text{ mm}$** at the screw boss and **$2.45\text{ mm}$** across the main body. At maximum adjustment rotation ($+2.5^\circ$), clearance is **$0.58\text{ mm}$** at the boss and **$1.60\text{ mm}$** across the main body (and still $+0.45\text{ mm}$ at $+3.0^\circ$), completely eliminating gear mesh binding!
+    - **Matching Rotated Relief on `duct_extension`:** Added rotated cylindrical cut ($R = 19.00\text{ mm}$ at $(122.76, 107.19\text{ mm})$) and recalibrated forward sealing spigot to $Z \in [79.80, 85.50\text{ mm}]$, providing **$>0.75\text{ mm}$** clearance at full adjustment rotation and maintaining $>1.70\text{ mm}$ solid ABS ceiling over the inner duct.
+
+---
 
 ## Fastener Bill of Materials (BOM) & Joint Mapping
 

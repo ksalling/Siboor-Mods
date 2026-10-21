@@ -221,8 +221,9 @@ def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -
     dext_sh = translate_shape(raw_dext, 0, dy, dz_dext)
 
     # Forward sealing spigot lip (telescoping 2.2 mm forward into carriage_base / carriage)
-    spigot_outer = make_box(119.75, front_y - 2.20, 81.30, 133.65, front_y + 1.20, 87.30)
-    spigot_inner = make_box(120.55, front_y - 3.00, 82.10, 132.85, front_y + 2.00, 86.50)
+    # Calibrated to Z in [79.80, 85.50 mm] to match lowered carriage_base inlet ceiling with >1.7 mm solid ABS ceiling under motor
+    spigot_outer = make_box(119.75, front_y - 2.20, 79.80, 133.65, front_y + 1.20, 85.50)
+    spigot_inner = make_box(120.55, front_y - 3.00, 80.60, 132.85, front_y + 2.00, 84.70)
     spigot_ring = cut_shapes(spigot_outer, [spigot_inner])
     dext_fused = fuse_shapes([dext_sh, spigot_ring])
 
@@ -235,7 +236,10 @@ def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -
     notch_l = make_box(103.00, 162.00, 85.00, 116.00, 170.50, 86.90)
     notch_r = make_box(137.00, 162.00, 85.00, 150.00, 170.50, 86.90)
 
-    return cut_shapes(dext_fused, [screw_l, screw_r, notch_l, notch_r])
+    # Rotated NEMA 14 pancake motor body relief cut for backlash adjustment rotation (R=19.00 mm at rotated center (122.76, 107.19))
+    cut_dext_rot = make_cyl_y(122.760, 107.190, front_y - 3.0, front_y + 12.0, 19.00)
+
+    return cut_shapes(dext_fused, [screw_l, screw_r, notch_l, notch_r, cut_dext_rot])
 
 
 def build_modified_latch(raw_latch: TopoDS_Shape, dy: float, dz: float, r_hole: float = 1.65) -> TopoDS_Shape:
@@ -355,8 +359,10 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     # --- 1. Dedicated ABS-Printable `carriage_base` ---
     # Prints FLAT on its Y=146.10 mm front face on the build plate with ZERO internal supports!
     leg_bot_z = 38.32 + dz      # 46.32 mm (bottom of side mounting tabs; 3.25 mm margin below side M3 screw at Z=49.57 mm)
-    base_core = make_box(103.70, front_y, leg_bot_z, 149.70, base_rear_y, 84.43 + dz)
-    top_ear_l = make_box(108.48, front_y, 86.00, 115.50, base_rear_y, 95.00)
+    base_core = make_box(103.70, front_y, leg_bot_z, 149.70, base_rear_y, 87.20)
+    boss_l = make_cyl_y(111.98, 89.569, front_y, base_rear_y, 2.40)
+    boss_pillar = make_box(108.48, front_y, 86.00, 114.30, base_rear_y, 89.569)
+    top_ear_l = fuse_shapes([boss_l, boss_pillar])
     top_ear_r = make_box(137.90, front_y, 86.00, 144.92, base_rear_y, 95.00)
 
     # Rear columns and backing web mating to siboorCNC (Y=165.10 mm):
@@ -376,6 +382,19 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         rear_web_low, low_boss_l, low_boss_r,
     ])
 
+    chan_z_top = 85.20
+
+    # NEMA 14 pancake motor cuts for gear-mesh adjustment clearance:
+    # 1. cyl_safe: Global cylinder cut (R=19.45 mm) safe for the screw boss at (111.98, 89.569)
+    cyl_safe = make_cyl_y(122.371, 108.069, front_y - 1.0, base_rear_y + 1.0, 19.45)
+    # 2. cut_O1: Deep nominal cylinder cut (R=20.25 mm) bounded to X >= 114.30 mm
+    deep_cyl1 = make_cyl_y(122.371, 108.069, front_y - 1.0, base_rear_y + 1.0, 20.25)
+    # 3. cut_O2: Deep rotated cylinder cut (R=19.85 mm at (122.76, 107.19)) bounded to X >= 114.30 mm
+    deep_cyl2 = make_cyl_y(122.760, 107.190, front_y - 1.0, base_rear_y + 1.0, 19.85)
+    deep_box = make_box(114.30, front_y - 1.0, 80.0, 150.0, base_rear_y + 1.0, 130.0)
+    cut_O1 = BRepAlgoAPI_Common(deep_cyl1, deep_box).Shape()
+    cut_O2 = BRepAlgoAPI_Common(deep_cyl2, deep_box).Shape()
+
     cbase_cuts = [
         # A. Relief at Y=155.00..156.00 for siboorCNC's upper forward standoffs (X=104.2..115.2 and 138.2..150.4, Z=69.5..76.2)
         make_box(103.00, 155.00, 69.50, 115.20, 156.00, 76.20),
@@ -385,10 +404,10 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         # C. Loosened relief for aduct lower mounting tab (X=115.00..138.50, Z=34.50..42.50, Y to 148.30):
         make_box(115.00, front_y - 0.5, 34.50, 138.50, 148.30, 42.50),
         # D. Straight-through vertical internal airflow channel (100% HERMETICALLY SEALED - ZERO LEAKS!)
-        # Top ceiling lowered to Z=86.80 mm to preserve airtight solid wall under pancake motor
-        make_box(119.68, 147.30, 44.00, 133.72, 154.30, 86.80),
-        # E. Top rear inlet port to duct_extension (X=119.68..133.72, Y=152.50..156.50, Z=81.00..87.50)
-        make_box(119.68, 152.50, 81.00, 133.72, 156.50, 87.50),
+        # Top ceiling lowered to Z=85.20 mm to preserve >2.1 mm solid airtight wall under pancake motor
+        make_box(119.68, 147.30, 44.00, 133.72, 154.30, chan_z_top),
+        # E. Top rear inlet port to duct_extension (X=119.68..133.72, Y=152.50..156.50, Z=79.50..85.80)
+        make_box(119.68, 152.50, 79.50, 133.72, 156.50, chan_z_top + 0.60),
         # F. Sized rectangular wiring passthrough through carriage_base (clears upper CNC standoff at Z=73.02 with >3.7 mm margin):
         make_box(107.00, front_y - 1.0, 78.50, 118.00, 166.00, 84.50),
         # G. Stock carriage-to-carriage_base M3 heat-set insert holes (shifted by dz=+8.0):
@@ -418,12 +437,13 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         make_box(138.50, 160.50, 40.00, 150.50, 166.00, 72.00),
         # N. Pocket for led_mount central bridge clearance (X in [122.5, 130.9], Y in [155.0, 156.4]):
         make_box(122.50, 145.00, 35.00, 130.90, 156.40, 42.50),
-        # O. NEMA 14 pancake motor cylindrical body relief cut (R=18.35 mm, center at X=122.371, Z=108.069, leaving >1.5 mm solid ceiling):
-        make_cyl_y(122.371, 108.069, front_y - 1.0, base_rear_y + 1.0, 18.35),
-        # P. NEMA 14 pancake motor lower-left ear relief cut:
-        make_box(98.00, front_y - 1.0, 88.00, 107.00, base_rear_y + 1.0, 102.00),
+        # O. NEMA 14 pancake motor cuts for gear-mesh adjustment clearance:
+        cyl_safe,
+        cut_O1,
+        cut_O2,
+        # P. NEMA 14 pancake motor lower-left ear relief cut (expanded for rotation clearance):
+        make_box(98.00, front_y - 1.0, 88.00, 108.50, base_rear_y + 1.0, 103.00),
     ]
-
     cbase_body = cut_shapes(cbase_solid, cbase_cuts)
 
     # Pre-hollowed downward male sealing spigot lip (Z=50.82..54.32) telescoping into [a]_duct's throat
