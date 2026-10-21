@@ -274,6 +274,56 @@ def build_modified_latch(raw_latch: TopoDS_Shape, dy: float, dz: float, r_hole: 
     trsf.SetTranslation(gp_Vec(0, dy, dz))
     return BRepBuilderAPI_Transform(curr, trsf, True).Shape()
 
+def build_5015_standoff(
+    raw_standoff: TopoDS_Shape,
+    x_center: float,
+    z_center: float,
+    dy: float,
+    dz: float,
+    r_insert: float,
+    depth_insert: float,
+    r_screw: float = 1.70,
+    depth_screw: float = 3.0,
+) -> TopoDS_Shape:
+    """Rebuilds 5015 fan standoff with calibrated heat-set insert pockets and pilot holes:
+    - Plugs existing oversized voids (dia 4.75 mm) at front (Y=160.10) and rear (Y=197.856).
+    - Shaves plug faces flush to Y=160.10 and Y=197.856.
+    - Cuts new insert pocket (radius r_insert, depth depth_insert).
+    - Cuts pilot / screw clearance bore (radius r_screw=1.70 mm, depth depth_screw=3.0 mm).
+    - Cuts lead-in chamfer cone (0.4 mm x 45 deg) at entry face for easy insert alignment.
+    - Translates by (dy, dz) into assembly coordinates.
+    """
+    # Plugs extend slightly past ends to ensure clean union
+    plug_f = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(x_center, 159.00, z_center), gp_Dir(0, 1, 0)), 2.60, 9.0).Shape()
+    plug_r = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(x_center, 189.50, z_center), gp_Dir(0, 1, 0)), 2.60, 9.5).Shape()
+    plugged = BRepAlgoAPI_Fuse(raw_standoff, plug_f).Shape()
+    plugged = BRepAlgoAPI_Fuse(plugged, plug_r).Shape()
+
+    # Shave flush with original end planes Y=160.10 and Y=197.856
+    shave_f = BRepPrimAPI_MakeBox(gp_Pnt(x_center - 10.0, 150.0, z_center - 10.0), gp_Pnt(x_center + 10.0, 160.10, z_center + 10.0)).Shape()
+    shave_r = BRepPrimAPI_MakeBox(gp_Pnt(x_center - 10.0, 197.856, z_center - 10.0), gp_Pnt(x_center + 10.0, 205.0, z_center + 10.0)).Shape()
+    solid_bar = BRepAlgoAPI_Cut(plugged, shave_f).Shape()
+    solid_bar = BRepAlgoAPI_Cut(solid_bar, shave_r).Shape()
+
+    # Front cuts (entry at Y=160.10 extending in +Y direction)
+    cut_f_insert = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(x_center, 159.90, z_center), gp_Dir(0, 1, 0)), r_insert, depth_insert + 0.20).Shape()
+    cut_f_screw = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(x_center, 160.10 + depth_insert - 0.05, z_center), gp_Dir(0, 1, 0)), r_screw, depth_screw + 0.05).Shape()
+    cut_f_chamf = BRepPrimAPI_MakeCone(gp_Ax2(gp_Pnt(x_center, 159.90, z_center), gp_Dir(0, 1, 0)), r_insert + 0.40, r_insert, 0.40).Shape()
+
+    # Rear cuts (entry at Y=197.856 extending in -Y direction)
+    cut_r_insert = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(x_center, 198.056, z_center), gp_Dir(0, -1, 0)), r_insert, depth_insert + 0.20).Shape()
+    cut_r_screw = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(x_center, 197.856 - depth_insert + 0.05, z_center), gp_Dir(0, -1, 0)), r_screw, depth_screw + 0.05).Shape()
+    cut_r_chamf = BRepPrimAPI_MakeCone(gp_Ax2(gp_Pnt(x_center, 198.056, z_center), gp_Dir(0, -1, 0)), r_insert + 0.40, r_insert, 0.40).Shape()
+
+    cuts = [cut_f_insert, cut_f_screw, cut_f_chamf, cut_r_insert, cut_r_screw, cut_r_chamf]
+    curr = solid_bar
+    for c in cuts:
+        curr = BRepAlgoAPI_Cut(curr, c).Shape()
+
+    trsf = gp_Trsf()
+    trsf.SetTranslation(gp_Vec(0, dy, dz))
+    return BRepBuilderAPI_Transform(curr, trsf, True).Shape()
+
 
 def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     """Builds Variant_A_Separate_Carriage_Base_14mm (dY = -14.0 mm, dZ = +8.0 mm).
@@ -295,6 +345,8 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     raw_dext = load_brep(carriage_meta["duct_extension"]["brep"])
     raw_ledm = load_brep(carriage_meta["led_mount"]["brep"])
     raw_latch = load_brep(carriage_meta["[a]_latch"]["brep"])
+    raw_so_l = load_brep(carriage_meta["5015_standoff_x2"]["brep"])
+    raw_so_r = load_brep(carriage_meta["5015_standoff_x2 (1)"]["brep"])
 
     front_y = 160.10 + dy       # 146.10 mm (100% flat front face of carriage_base)
     base_rear_y = 169.50 + dy   # 155.50 mm (main rear face of carriage_base)
@@ -450,6 +502,14 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     # --- 7. Modified [a]_latch (enlarged M3 dowel pin holes) ---
     latch_mod = build_modified_latch(raw_latch, dy, dz, r_hole=1.65)
 
+    # --- 8. Modified 5015 Standoffs (OD 5mm and OD 4mm Heat-Set Insert Options) ---
+    # Left standoff centered at (98.91, 117.21); Right standoff centered at (154.47, 131.55)
+    # OD 5mm insert: r=2.25 mm (dia 4.50 mm), depth 5.50 mm (for standard Voron/M3x5mm inserts)
+    # OD 4mm insert: r=1.80 mm (dia 3.60 mm), depth 5.80 mm (for 5mm depth M3x4mm inserts)
+    so_l_od5 = build_5015_standoff(raw_so_l, 98.91, 117.21, dy, dz, r_insert=2.25, depth_insert=5.50, r_screw=1.70, depth_screw=3.0)
+    so_r_od5 = build_5015_standoff(raw_so_r, 154.47, 131.55, dy, dz, r_insert=2.25, depth_insert=5.50, r_screw=1.70, depth_screw=3.0)
+    so_l_od4 = build_5015_standoff(raw_so_l, 98.91, 117.21, dy, dz, r_insert=1.80, depth_insert=5.80, r_screw=1.70, depth_screw=3.0)
+
     return {
         "carriage_base": cbase_mod,
         "carriage": carr_mod,
@@ -458,6 +518,10 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         "led_mount": ledm_mod,
         "siboor_cartographer_mount": siboor_carto,
         "[a]_latch": latch_mod,
+        "5015_standoff_x2": so_l_od5,
+        "5015_standoff_x2 (1)": so_r_od5,
+        "5015_standoff_x2_OD5_insert": so_l_od5,
+        "5015_standoff_x2_OD4_insert": so_l_od4,
     }
 
 
@@ -666,6 +730,8 @@ def export_assembly_step(
 
     # 3. Modified Parts for this Variant:
     for mname, mshape in mod_parts.items():
+        if mname.endswith("_insert"):
+            continue
         col = COLOR_ACCENT if mname.startswith("[a]_") else COLOR_PRIMARY
         add_colored_part(shape_tool, color_tool, mshape, mname, col)
 
@@ -677,6 +743,8 @@ def export_assembly_step(
         "btt_eddy_mount",
         "cartographer_mount",
         "led_mount",
+        "5015_standoff_x2",
+        "5015_standoff_x2 (1)",
     }
     for cname, cinfo in carriage_meta.items():
         if cname in skip_parts:
@@ -729,6 +797,8 @@ def export_all_variants():
         os.makedirs(stl_dir, exist_ok=True)
 
         for pname, pshape in vparts.items():
+            if pname == "5015_standoff_x2 (1)":
+                continue
             nsolids = count_solids(pshape)
             bb = get_bbox(pshape)
             print(f"  {pname:28s} | solids={nsolids} | bbox={bb}")

@@ -1,4 +1,4 @@
-# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.8: Print & Build Ready with Modified [a]_latch)
+# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.9: Print & Build Ready with Dual 5015 Standoff Heat-Set Insert Options)
 
 This repository contains the parametric CAD modifications (`STEP` and `STL`) to mount the **Lineux Hotswap Toolchanger Carriage** (`LineuxCarriage.step` & `LineuxTool.step`) directly onto the stock **Siboor Voron Trident CNC Carriage** (`siboorCNC.step` on an `MGN12H` linear rail block), replacing the stock Lineux `carriage_base` part.
 
@@ -86,6 +86,13 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
     - **Dedicated Deliverables:** Added `[a]_latch.step` and `[a]_latch.stl` directly to the production deliverables in `Siboor Lineux Mod/Variant_A_Separate_Carriage_Base_14mm/`.
 
 ---
+16. **Dual 5015 Standoff Heat-Set Insert Options (Iteration 5.9):**
+    - **Root Cause:** Stock Lineux `5015_standoff_x2` end holes were modeled at $\varnothing 4.75\text{ mm}$ ($R = 2.375\text{ mm}$), which provided insufficient radial interference ($0.25\text{ mm}$ total) for standard $5.0\text{ mm}$ OD heat-set inserts (causing loose fits and stripping under torque), and was completely oversized for $4.0\text{ mm}$ OD inserts.
+    - **Resolution — Two Calibrated Options Provided:**
+      1. **`5015_standoff_x2_OD5_insert` (OD 5.0mm Inserts):** Reconstructed with an insert pocket bore of **$\varnothing 4.50\text{ mm}$ ($R = 2.25\text{ mm}$)**, depth **$5.50\text{ mm}$**, $\varnothing 3.40\text{ mm}$ ($R = 1.70\text{ mm}$) M3 screw clearance bore to depth $3.0\text{ mm}$, and a $0.40\text{ mm} \times 45^\circ$ conical lead-in chamfer ($\varnothing 5.30\text{ mm}$ at mouth). Provides $0.50\text{ mm}$ diametral interference for standard Voron/M3x5mm brass inserts with strong knurl melt retention. Also exported as standard `5015_standoff_x2.step` and `5015_standoff_x2.stl`.
+      2. **`5015_standoff_x2_OD4_insert` (OD 4.0mm Inserts, 5.0mm depth):** Reconstructed with an insert pocket bore of **$\varnothing 3.60\text{ mm}$ ($R = 1.80\text{ mm}$)**, depth **$5.80\text{ mm}$** (to allow the 5mm deep insert to sit sub-flush with a plastic reservoir), $\varnothing 3.40\text{ mm}$ ($R = 1.70\text{ mm}$) M3 clearance bore to depth $3.0\text{ mm}$, and a $0.40\text{ mm} \times 45^\circ$ conical lead-in chamfer ($\varnothing 4.40\text{ mm}$ at mouth). Provides $0.40\text{ mm}$ diametral interference for 4mm OD inserts.
+    - **Preserved Geometry:** Both versions maintain the exact stock $37.76\text{ mm}$ length along $Y$, preserving the required $18\text{ mm}$ clearance gap behind the NEMA 14 stepper motor.
+
 
 ## Fastener Bill of Materials (BOM) & Joint Mapping
 
@@ -99,6 +106,7 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
 | **2x M3x10mm SHCS** | $X = 110.90, 142.50$, $Y = 167.30$, vertical | `siboor_cartographer_mount` $\to$ `siboorCNC` Bottom Legs ($Z = 14.52$) | Bottom $\varnothing 6.2\text{ mm}$ counterbores on mount |
 | **2x M3x30mm Steel Dowel Pins** | $X = 137.72, Y = 139.05, 151.95$ | Guide / lock pins in top of `[a]_latch` ($Z \in [114.16, 142.16]$) | Press / push-fit into $\varnothing 3.30\text{ mm}$ chamfered holes |
 | **2x M3x20mm Steel Dowel Pins** | Pivot / guide pins in `[a]_latch` | Transverse / lower pin locations | Smooth slip / push-fit into $\varnothing 3.30\text{ mm}$ holes |
+| **4x M3 Heat-Set Inserts** | Both ends of 2x `5015_standoff_x2` ($Y = 160.10, 197.86$) | Connects standoffs to `carriage` front and `5015_adapter` rear | Choose OD 5.0mm ($\varnothing 4.50\text{ mm}$ hole) or OD 4.0mm ($\varnothing 3.60\text{ mm}$ hole) version |
 
 ---
 
@@ -113,6 +121,7 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
 | **`led_mount`** | **Front Face** | **None** | Trimmed compact bracket with aligned $\varnothing 3.4\text{ mm}$ holes. |
 | **`siboor_cartographer_mount`** | **Top Face ($Z = 14.52\text{ mm}$)** | **N/A** | Simple bracket with counterbored vertical M3 holes. |
 | **`[a]_latch`** | **Side Face ($Y = 140.50\text{ mm}$)** | **None** | Flat side face on build plate. Horizontal channels print cleanly. |
+| **`5015_standoff_x2`** | **End Face ($Y = 160.10\text{ mm}$)** | **None** | Print vertically on either end face with brim/raft for bed adhesion. |
 
 ---
 
@@ -129,6 +138,10 @@ Siboor Lineux Mod/
 └── Variant_A_Separate_Carriage_Base_14mm/
     ├── CAD/
     │   ├── [a]_duct.step
+    │   ├── [a]_latch.step
+    │   ├── 5015_standoff_x2.step
+    │   ├── 5015_standoff_x2_OD5_insert.step
+    │   ├── 5015_standoff_x2_OD4_insert.step
     │   ├── carriage_base.step
     │   ├── carriage.step
     │   ├── duct_extension.step
@@ -138,6 +151,10 @@ Siboor Lineux Mod/
     │   └── Siboor_Lineux_Carriage_With_Tool_Assembly.step
     └── STL/
         ├── [a]_duct.stl
+        ├── [a]_latch.stl
+        ├── 5015_standoff_x2.stl
+        ├── 5015_standoff_x2_OD5_insert.stl
+        ├── 5015_standoff_x2_OD4_insert.stl
         ├── carriage_base.stl
         ├── carriage.stl
         ├── duct_extension.stl
