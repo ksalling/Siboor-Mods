@@ -30,7 +30,7 @@ from OCP.BRepAlgoAPI import BRepAlgoAPI_Common, BRepAlgoAPI_Cut, BRepAlgoAPI_Fus
 from OCP.BRepBuilderAPI import BRepBuilderAPI_Transform
 from OCP.BRepGProp import BRepGProp
 from OCP.BRepMesh import BRepMesh_IncrementalMesh
-from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCylinder
+from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox, BRepPrimAPI_MakeCone, BRepPrimAPI_MakeCylinder
 from OCP.BRepTools import BRepTools
 from OCP.GProp import GProp_GProps
 from OCP.IFSelect import IFSelect_RetDone
@@ -238,6 +238,43 @@ def build_shifted_duct_extension(raw_dext: TopoDS_Shape, dy: float, dz: float) -
     return cut_shapes(dext_fused, [screw_l, screw_r, notch_l, notch_r])
 
 
+def build_modified_latch(raw_latch: TopoDS_Shape, dy: float, dz: float, r_hole: float = 1.65) -> TopoDS_Shape:
+    """Modifies stock [a]_latch to enlarge M3 dowel pin holes for smooth push-fit without cracking:
+    - Top Axial Dowel Holes (Photo 1 & 2): Z in [114.16, 142.16] enlarged to R=1.65 mm (dia 3.30 mm)
+      with a 0.45 mm x 45 deg lead-in chamfer cone at the top mouth (Z=142.16 mm).
+    - Transverse Dowel / Pivot Holes (Photo 3): Y in [135.0, 156.0] at (135.82, 93.67) and (141.82, 117.03)
+      enlarged to R=1.65 mm (dia 3.30 mm).
+    - Bottom Axial Dowel Holes: Z in [78.19, 97.19] enlarged to R=1.65 mm (dia 3.30 mm)
+      with a 0.45 mm x 45 deg lead-in chamfer cone at the bottom mouth (Z=78.19 mm).
+    - Shifts by (dy, dz) = (-14.0 mm, +8.0 mm) into carriage assembly coordinates.
+    """
+    # 1. Top Axial Dowel Holes (Photo 1 & 2, len 28.0 mm):
+    cyl_z1 = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(137.723946, 139.049506, 114.158783), gp_Dir(0, 0, 1)), r_hole, 28.5).Shape()
+    cyl_z2 = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(137.723946, 151.949508, 114.158783), gp_Dir(0, 0, 1)), r_hole, 28.5).Shape()
+    cone_z1 = BRepPrimAPI_MakeCone(gp_Ax2(gp_Pnt(137.723946, 139.049506, 141.658783), gp_Dir(0, 0, 1)), r_hole, r_hole + 0.45, 0.5).Shape()
+    cone_z2 = BRepPrimAPI_MakeCone(gp_Ax2(gp_Pnt(137.723946, 151.949508, 141.658783), gp_Dir(0, 0, 1)), r_hole, r_hole + 0.45, 0.5).Shape()
+
+    # 2. Transverse Holes (Photo 3, through Y):
+    cyl_y1 = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(135.823946, 135.0, 93.671252), gp_Dir(0, 1, 0)), r_hole, 21.0).Shape()
+    cyl_y2 = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(141.823946, 135.0, 117.028693), gp_Dir(0, 1, 0)), r_hole, 21.0).Shape()
+
+    # 3. Bottom Axial Dowel Holes (len 19.0 mm):
+    cyl_z3 = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(139.333566, 136.949506, 77.0), gp_Dir(0, 0, 1)), r_hole, 20.191612).Shape()
+    cyl_z4 = BRepPrimAPI_MakeCylinder(gp_Ax2(gp_Pnt(139.333566, 151.949508, 77.0), gp_Dir(0, 0, 1)), r_hole, 20.191612).Shape()
+    cone_z3 = BRepPrimAPI_MakeCone(gp_Ax2(gp_Pnt(139.333566, 136.949506, 78.691612), gp_Dir(0, 0, -1)), r_hole, r_hole + 0.45, 0.5).Shape()
+    cone_z4 = BRepPrimAPI_MakeCone(gp_Ax2(gp_Pnt(139.333566, 151.949508, 78.691612), gp_Dir(0, 0, -1)), r_hole, r_hole + 0.45, 0.5).Shape()
+
+    cuts = [cyl_z1, cyl_z2, cone_z1, cone_z2, cyl_y1, cyl_y2, cyl_z3, cyl_z4, cone_z3, cone_z4]
+
+    curr = raw_latch
+    for c in cuts:
+        curr = cut_shapes(curr, [c])
+
+    trsf = gp_Trsf()
+    trsf.SetTranslation(gp_Vec(0, dy, dz))
+    return BRepBuilderAPI_Transform(curr, trsf, True).Shape()
+
+
 def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     """Builds Variant_A_Separate_Carriage_Base_14mm (dY = -14.0 mm, dZ = +8.0 mm).
     Iteration 5.4 Features:
@@ -257,6 +294,7 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     raw_aduct = load_brep(carriage_meta["[a]_duct"]["brep"])
     raw_dext = load_brep(carriage_meta["duct_extension"]["brep"])
     raw_ledm = load_brep(carriage_meta["led_mount"]["brep"])
+    raw_latch = load_brep(carriage_meta["[a]_latch"]["brep"])
 
     front_y = 160.10 + dy       # 146.10 mm (100% flat front face of carriage_base)
     base_rear_y = 169.50 + dy   # 155.50 mm (main rear face of carriage_base)
@@ -409,6 +447,9 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
     # --- 6. Modified LED Mount (trimmed lower legs, aligned upper mounting holes) ---
     ledm_mod = build_led_mount(raw_ledm, dy, dz)
 
+    # --- 7. Modified [a]_latch (enlarged M3 dowel pin holes) ---
+    latch_mod = build_modified_latch(raw_latch, dy, dz, r_hole=1.65)
+
     return {
         "carriage_base": cbase_mod,
         "carriage": carr_mod,
@@ -416,6 +457,7 @@ def build_variant_a_parts(carriage_meta: dict) -> dict[str, TopoDS_Shape]:
         "duct_extension": dext_mod,
         "led_mount": ledm_mod,
         "siboor_cartographer_mount": siboor_carto,
+        "[a]_latch": latch_mod,
     }
 
 

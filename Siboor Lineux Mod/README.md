@@ -1,4 +1,4 @@
-# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.7: Print & Build Ready)
+# Siboor Lineux Mod — Siboor Voron Trident CNC Carriage Adaptation (Iteration 5.8: Print & Build Ready with Modified [a]_latch)
 
 This repository contains the parametric CAD modifications (`STEP` and `STL`) to mount the **Lineux Hotswap Toolchanger Carriage** (`LineuxCarriage.step` & `LineuxTool.step`) directly onto the stock **Siboor Voron Trident CNC Carriage** (`siboorCNC.step` on an `MGN12H` linear rail block), replacing the stock Lineux `carriage_base` part.
 
@@ -78,6 +78,13 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
     - **Arch & Tab Relief Widening:** Widened `carriage_base`'s bottom arch Cut B to $X \in [105.90, 147.50\text{ mm}]$ (+0.40 mm clearance per side over `[a]_duct`'s $Z = 52.82\text{ mm}$ flat top) and tab relief Cut C to $X \in [115.00, 138.50\text{ mm}]$, $Z \in [34.50, 42.50\text{ mm}]$ ($Y$ to $148.30\text{ mm}$), providing $>0.50\text{ mm}$ clearance around the tab.
     - **Carriage Lower Tongue Side Relief:** Relieved the side faces of `carriage`'s lower tongue ($X \in [114.50, 115.80\text{ mm}]$ and $[137.70, 139.00\text{ mm}]$), narrowing the tongue to $21.90\text{ mm}$ to slide easily into `[a]_duct`'s $22.43\text{ mm}$ pocket with $+0.26\text{ mm}$ clearance on each side.
     - **Shrinkage-Compensated M3 Fastener Holes:** Expanded the lower M3 clearance holes across `[a]_duct`, `carriage`, and `carriage_base` to $R = 1.85\text{ mm}$ ($\varnothing 3.7\text{ mm}$), allowing M3 hardware to glide freely even with ABS print contraction.
+
+15. **Modified `[a]_latch` with Enlarged M3 Dowel Pin Holes (Iteration 5.8):**
+    - **Top Axial Dowel Pin Holes (Photo 1 & 2):** In stock Lineux `[a]_latch`, the two top vertical holes ($Z \in [114.16, 142.16\text{ mm}]$, length $28.0\text{ mm}$) for the M3x30mm steel dowel pins were modeled at $\varnothing 3.10\text{ mm}$ ($R = 1.55\text{ mm}$). Due to FDM ABS thermal shrinkage and inner perimeter facetting, these printed at $\sim 2.90\text{ mm}$, causing severe hoop stress that delaminated the thin $1.0\text{ mm}$ outer ABS wall during pin insertion. These holes have been enlarged to **$\varnothing 3.30\text{ mm}$ ($R = 1.65\text{ mm}$)** with a **$0.45\text{ mm} \times 45^\circ$ conical lead-in chamfer** at the mouth ($Z = 142.16\text{ mm}$), allowing the hardened M3 steel dowel pins to slide in with a smooth, snug push fit with zero layer splitting.
+    - **Transverse Dowel / Pivot Holes (Photo 3):** Enlarged the transverse holes along $Y$ ($X = 135.82, Z = 93.67\text{ mm}$ and $X = 141.82, Z = 117.03\text{ mm}$) to **$\varnothing 3.30\text{ mm}$ ($R = 1.65\text{ mm}$)** through $Y \in [135.0, 156.0\text{ mm}]$, eliminating binding from horizontal hole roof-droop.
+    - **Bottom Axial Dowel Holes:** Enlarged the lower vertical holes ($Z \in [78.19, 97.19\text{ mm}]$, length $19.0\text{ mm}$) to **$\varnothing 3.30\text{ mm}$ ($R = 1.65\text{ mm}$)** with a $0.45\text{ mm} \times 45^\circ$ lead-in chamfer cone at $Z = 78.19\text{ mm}$.
+    - **Dedicated Deliverables:** Added `[a]_latch.step` and `[a]_latch.stl` directly to the production deliverables in `Siboor Lineux Mod/Variant_A_Separate_Carriage_Base_14mm/`.
+
 ---
 
 ## Fastener Bill of Materials (BOM) & Joint Mapping
@@ -90,6 +97,8 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
 | **3x M3x8mm SHCS** | $X = 140.50$ ($Z=84.57$), $X = 106.20, 147.20$ ($Z=57.32$) | `carriage` $\to$ `carriage_base` Front Face ($Y = 146.10$) | Front counterbores in `carriage`, M3 heat-set inserts in `carriage_base` |
 | **2x M3x8mm BHCS** | $X = 106.30, 147.10$, $Z = 49.57$, $Y = 150.80$ | `[a]_duct` Upper Side Tabs $\to$ `carriage_base` | $\varnothing 3.4\text{ mm}$ clearance in side skirts, M3 heat-sets in `[a]_duct` |
 | **2x M3x10mm SHCS** | $X = 110.90, 142.50$, $Y = 167.30$, vertical | `siboor_cartographer_mount` $\to$ `siboorCNC` Bottom Legs ($Z = 14.52$) | Bottom $\varnothing 6.2\text{ mm}$ counterbores on mount |
+| **2x M3x30mm Steel Dowel Pins** | $X = 137.72, Y = 139.05, 151.95$ | Guide / lock pins in top of `[a]_latch` ($Z \in [114.16, 142.16]$) | Press / push-fit into $\varnothing 3.30\text{ mm}$ chamfered holes |
+| **2x M3x20mm Steel Dowel Pins** | Pivot / guide pins in `[a]_latch` | Transverse / lower pin locations | Smooth slip / push-fit into $\varnothing 3.30\text{ mm}$ holes |
 
 ---
 
@@ -103,6 +112,7 @@ This repository contains the parametric CAD modifications (`STEP` and `STL`) to 
 | **`duct_extension`** | **Rear Flange** | **None** | Stock $28.37\text{ mm}$ length with forward male sealing spigot. |
 | **`led_mount`** | **Front Face** | **None** | Trimmed compact bracket with aligned $\varnothing 3.4\text{ mm}$ holes. |
 | **`siboor_cartographer_mount`** | **Top Face ($Z = 14.52\text{ mm}$)** | **N/A** | Simple bracket with counterbored vertical M3 holes. |
+| **`[a]_latch`** | **Side Face ($Y = 140.50\text{ mm}$)** | **None** | Flat side face on build plate. Horizontal channels print cleanly. |
 
 ---
 
